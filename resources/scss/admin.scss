@@ -1,0 +1,198 @@
+// Import Bootstrap SASS
+@import "bootstrap/scss/bootstrap";
+
+// TEST STYLING - Hapus atau sesuaikan setelah tes
+body {
+    background-color: red !important; // Tes warna latar mencolok
+}
+
+.layout-menu { // Sidebar
+    background-color: yellow !important; // Tes warna sidebar mencolok
+    border: 5px solid green !important;
+}
+
+.layout-page > .layout-navbar {
+    background-color: cyan !important;
+    border-bottom: 5px dashed orange !important;
+}
+
+.card {
+    border: 3px solid purple !important;
+}
+
+// Kustomisasi dasar untuk admin layout SahabatNews (terinspirasi Sneat)
+body {
+    background-color: #f5f5f9 !important; // Warna latar belakang umum Sneat
+}
+
+.layout-menu { // Sidebar
+    background-color: #ffffff !important; // Warna sidebar Sneat (putih)
+    border-right: 1px solid #d9dee3 !important;
+}
+
+.layout-page > .layout-navbar {
+    background-color: #ffffff !important; // Navbar atas juga putih di banyak tema Sneat, atau #f5f5f9 jika ingin sama dengan body bg
+    box-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12) !important; // Shadow halus untuk navbar
+    border-bottom: 1px solid #d9dee3 !important;
+}
+
+.app-brand-text.demo {
+    color: #566a7f !important; // Warna teks logo
+}
+
+.menu-inner > .menu-item > .menu-link {
+    color: #566a7f !important;
+    font-weight: 500 !important;
+}
+
+.menu-inner > .menu-item .menu-sub .menu-link {
+    color: #697a8d !important;
+    font-weight: normal !important;
+}
+
+.menu-inner > .menu-item.active > .menu-link {
+    background-color: rgba(105, 108, 255, 0.08) !important; // Warna highlight menu aktif (lebih soft)
+    color: #696cff !important;
+    font-weight: 600 !important;
+}
+
+.menu-inner > .menu-item.open > .menu-link {
+    background-color: rgba(105, 108, 255, 0.04) !important;
+    color: #696cff !important;
+}
+
+.menu-header {
+    color: #a1acb8 !important;
+    font-size: 0.75rem !important;
+    font-weight: 600 !important;
+    padding: 0.75rem 1.5rem !important; // Menambahkan padding pada menu header
+}
+
+.card {
+    box-shadow: 0 2px 6px 0 rgba(67, 89, 113, 0.12) !important;
+    border: none !important; // Umumnya card Sneat tidak ada border luar, hanya shadow
+    margin-bottom: 1.5rem; // Memberi jarak antar card
+}
+
+.text-primary {
+  color: #696cff !important;
+}
+
+.btn-outline-primary {
+    border-color: #696cff !important;
+    color: #696cff !important;
+}
+.btn-outline-primary:hover {
+    background-color: #696cff !important;
+    color: #fff !important;
+}
+
+/* Styling untuk notifikasi agar lebih mirip Sneat */
+.alert {
+    border-radius: 0.375rem !important; /* rounded-md */
+    border-width: 0px !important; // Sneat alerts biasanya tidak ada border tebal
+    padding: 1rem 1.25rem !important;
+}
+
+.alert-success {
+    background-color: #e7fadf !important; /* light green */
+    color: #155724 !important;
+}
+
+.alert-danger {
+    background-color: #fde7e9 !important; /* light red */
+    color: #721c24 !important;
+}
+
+.btn-close {
+    filter: invert(40%) sepia(10%) saturate(900%) hue-rotate(175deg) brightness(95%) contrast(90%) !important;
+}
+
+.container-p-y {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+}
+
+.content-wrapper {
+    padding: 1.5rem; // Padding umum untuk content wrapper
+}
+
+.navbar-detached {
+    padding-left: 1.5rem !important;
+    padding-right: 1.5rem !important;
+}
+
+.app-brand.demo {
+    height: 64px; // Sesuaikan dengan tinggi navbar Anda
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+}
+
+.app-brand-logo.demo svg {
+    width: 30px; // Sesuaikan ukuran logo Anda
+    height: auto;
+}
+
+.app-brand-text.demo {
+    font-size: 1.25rem; // Sedikit lebih besar
+    letter-spacing: -0.5px;
+}
+
+.menu-item {
+    margin-bottom: 0.125rem; // Sedikit jarak antar item menu utama
+}
+
+.menu-link {
+    padding: 0.625rem 1.5rem; // Padding standar Sneat untuk menu link
+    border-radius: 0.375rem; // rounded-md
+    transition: all 0.3s ease-in-out;
+    display: flex; // Untuk alignment ikon dan teks
+    align-items: center;
+}
+
+.menu-icon {
+    font-size: 1.25rem; // Ukuran ikon
+    width: 20px; // Pastikan ikon tidak terlalu lebar
+    margin-right: 0.75rem; // Jarak ikon dan teks
+    color: #697a8d; // Warna ikon default
+}
+
+.menu-item.active > .menu-link .menu-icon,
+.menu-item.open > .menu-link .menu-icon {
+    color: #696cff !important; // Warna ikon saat aktif/open
+}
+
+.menu-header {
+    padding: 0.75rem 1.5rem 0.375rem !important; // Padding yang lebih sesuai untuk header
+    line-height: 1.2;
+}
+
+// Submenu styling
+.menu-sub {
+    padding-left: 0.75rem; // Indentasi untuk submenu
+    // Secara default disembunyikan, akan ditampilkan oleh JS saat parent .menu-item punya kelas .open
+    // Atau oleh CSS jika struktur Sneat asli menggunakan display: none / block
+    // Jika JS kita hanya toggle .open, maka kita perlu CSS untuk menampilkan .menu-sub
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+.menu-item.open > .menu-sub {
+    // display: block; // Jika ingin langsung block
+    max-height: 1000px; // Angka besar untuk mengakomodasi tinggi konten submenu
+    // Jika ingin animasi, perlu JS atau transisi CSS yang lebih kompleks
+}
+
+.menu-sub .menu-link {
+    padding: 0.5rem 1.5rem 0.5rem 0.75rem; // Padding untuk item submenu, indentasi kiri lebih kecil
+    font-size: 0.875rem;
+}
+
+.menu-sub .menu-item.active > .menu-link {
+    background-color: transparent !important; // Mungkin tidak perlu background berbeda untuk sub-item aktif
+    color: #696cff !important; // Hanya teks yang di-highlight
+    font-weight: 500 !important;
+}
+
+// Anda bisa menambahkan kustomisasi SASS tambahan di sini nanti 
