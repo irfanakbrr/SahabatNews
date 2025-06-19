@@ -150,16 +150,28 @@ Route::get('/login/{provider}', [SocialiteController::class, 'redirectToProvider
 Route::get('/login/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
 
 Route::get('/load-more-posts', function (\Illuminate\Http\Request $request) {
-    $page = $request->input('page', 2);
-    $perPage = 5;
-    $skip = ($page - 1) * $perPage + 7; // 7 = jumlah artikel awal yang sudah tampil
+    $page = (int) $request->input('page', 2);
+    $perPage = 6;
+    $skip = 5 + ($page - 2) * $perPage; // 5 berita utama sudah tampil, page=2 mulai dari index ke-5
     $posts = \App\Models\Post::where('status', 'published')
         ->latest('published_at')
         ->skip($skip)
         ->take($perPage)
         ->with('category')
-        ->get();
+        ->get()
+        ->map(function($post) {
+            return [
+                'slug' => $post->slug,
+                'title' => $post->title,
+                'image' => $post->image,
+                'category' => $post->category ? ['name' => $post->category->name, 'color' => $post->category->color] : null,
+                'published_at' => $post->published_at,
+            ];
+        });
     return response()->json($posts);
 });
+
+Route::view('/terms', 'terms')->name('terms');
+Route::view('/privacy', 'privacy')->name('privacy');
 
 require __DIR__.'/auth.php';

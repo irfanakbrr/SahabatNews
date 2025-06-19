@@ -94,7 +94,7 @@
 
         @if($bottomPosts->isNotEmpty())
             <div id="load-more-grid" class="w-full max-w-7xl mx-auto">
-                <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 grid-news">
                     @foreach($bottomPosts as $post)
                         <a href="{{ route('posts.show', $post) }}" class="bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
                             <img src="{{ $post->image ? asset('storage/' . $post->image) : 'https://via.placeholder.com/400x250?text=No+Image' }}" alt="{{ $post->title }}" class="w-full h-40 object-cover" loading="lazy">
@@ -121,32 +121,51 @@
 @push('scripts')
 <script>
 let page = 2;
-document.getElementById('load-more-btn')?.addEventListener('click', function() {
-    fetch('/load-more-posts?page=' + page)
-        .then(res => res.json())
-        .then(posts => {
-            if(posts.length === 0) {
-                document.getElementById('load-more-btn').disabled = true;
-                document.getElementById('load-more-btn').innerText = 'Tidak ada berita lagi';
-                return;
-            }
-            let grid = document.querySelector('#load-more-grid .grid');
-            posts.forEach(post => {
-                let card = document.createElement('a');
-                card.href = '/posts/' + post.slug;
-                card.className = 'bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group';
-                card.innerHTML = `
-                    <img src="${post.image ? '/storage/' + post.image : 'https://via.placeholder.com/400x250?text=No+Image'}" alt="${post.title}" class="w-full h-40 object-cover" loading="lazy">
-                    <div class=\"p-4 flex-1 flex flex-col\">
-                        <span class=\"inline-block bg-gray-500 text-white text-xs font-semibold px-2 py-1 rounded mb-2\">${post.category ? post.category.name : ''}</span>
-                        <div class=\"font-semibold text-base mb-1 group-hover:text-indigo-600 transition\">${post.title}</div>
-                        <div class=\"text-xs text-gray-500\">${post.published_at ? new Date(post.published_at).toLocaleDateString('id-ID') : '-'}</div>
-                    </div>
-                `;
-                grid.appendChild(card);
+const loadMoreBtn = document.getElementById('load-more-btn');
+const grid = document.querySelector('#load-more-grid .grid-news');
+console.log('Grid element:', grid);
+if(loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', function() {
+        console.log('Load more clicked', grid);
+        loadMoreBtn.disabled = true;
+        loadMoreBtn.innerText = 'Memuat...';
+        fetch('/load-more-posts?page=' + page)
+            .then(res => res.json())
+            .then(posts => {
+                console.log('Fetched posts:', posts);
+                if(posts.length === 0) {
+                    loadMoreBtn.disabled = true;
+                    loadMoreBtn.innerText = 'Tidak ada berita lagi';
+                    return;
+                }
+                if (!grid) {
+                  alert('Grid berita tidak ditemukan!');
+                  return;
+                }
+                posts.forEach(post => {
+                    let card = document.createElement('a');
+                    card.href = '/posts/' + post.slug;
+                    card.className = 'bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group';
+                    card.innerHTML = `
+                        <img src="${post.image ? '/storage/' + post.image : 'https://via.placeholder.com/400x250?text=No+Image'}" alt="${post.title}" class="w-full h-40 object-cover" loading="lazy">
+                        <div class=\"p-4 flex-1 flex flex-col\">
+                            <span class=\"inline-block ${post.category && post.category.color ? post.category.color : 'bg-gray-500'} text-white text-xs font-semibold px-2 py-1 rounded mb-2\">${post.category ? post.category.name : ''}</span>
+                            <div class=\"font-semibold text-base mb-1 group-hover:text-indigo-600 transition\">${post.title}</div>
+                            <div class=\"text-xs text-gray-500\">${post.published_at ? new Date(post.published_at).toLocaleDateString('id-ID') : '-'}</div>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+                page++;
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerText = 'Muat Berita Lain';
+            })
+            .catch(() => {
+                loadMoreBtn.disabled = false;
+                loadMoreBtn.innerText = 'Muat Berita Lain';
+                alert('Gagal memuat berita. Silakan coba lagi.');
             });
-            page++;
-        });
-});
+    });
+}
 </script>
 @endpush

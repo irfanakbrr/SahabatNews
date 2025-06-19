@@ -22,13 +22,6 @@
                     <x-nav-link href="{{ route('podcast') }}" :active="request()->routeIs('podcast')">
                         {{ __('Podcast') }}
                     </x-nav-link>
-                    @auth
-                        @if(auth()->user()->hasAnyRole(['admin','editor']))
-                        <x-nav-link href="{{ route('analytics') }}" :active="request()->routeIs('analytics')">
-                            {{ __('Analytics') }}
-                        </x-nav-link>
-                        @endif
-                    @endauth
                     <x-nav-link href="{{ route('contact') }}" :active="request()->routeIs('contact')">
                         {{ __('Contacts') }}
                     </x-nav-link>
@@ -59,7 +52,7 @@
                         </button>
                     </x-slot>
                     <x-slot name="content">
-                        @if(auth()->user()->hasAnyRole(['admin','editor']))
+                        @if(auth()->user()->hasRole('admin'))
                             <x-dropdown-link :href="route('dashboard')">
                                 {{ __('Dashboard') }}
                             </x-dropdown-link>
@@ -105,17 +98,10 @@
             <x-responsive-nav-link :href="route('podcast')" :active="request()->routeIs('podcast')">
                 {{ __('Podcast') }}
             </x-responsive-nav-link>
-             @auth
-                @if(auth()->user()->hasAnyRole(['admin','editor']))
-                <x-responsive-nav-link :href="route('analytics')" :active="request()->routeIs('analytics')">
-                    {{ __('Analytics') }}
-                </x-responsive-nav-link>
-                @endif
-            @endauth
             <x-responsive-nav-link :href="route('contact')" :active="request()->routeIs('contact')">
                 {{ __('Contacts') }}
             </x-responsive-nav-link>
-             <x-responsive-nav-link href="#" >
+            <x-responsive-nav-link href="#" >
                  {{ __('Support') }} {{-- Tambah support di mobile --}}
             </x-responsive-nav-link>
         </div>
@@ -128,7 +114,7 @@
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 </div>
                 <div class="mt-3 space-y-1">
-                     @if(auth()->user()->hasAnyRole(['admin','editor']))
+                     @if(auth()->user()->hasRole('admin'))
                         <x-responsive-nav-link :href="route('dashboard')">
                             {{ __('Dashboard') }}
                         </x-responsive-nav-link>

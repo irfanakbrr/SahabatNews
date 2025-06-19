@@ -67,6 +67,11 @@
         <!-- Copyright -->
         <div class="mt-8 border-t border-gray-200 dark:border-gray-700 pt-8">
             <p class="text-base text-gray-400 text-center">&copy; {{ date('Y') }} SahabatNews. All rights reserved.</p>
+            <div class="flex justify-center mt-2 space-x-4 text-xs text-gray-500 dark:text-gray-400">
+                <a href="{{ route('terms') }}" class="hover:underline">Syarat & Ketentuan</a>
+                <span>|</span>
+                <a href="{{ route('privacy') }}" class="hover:underline">Kebijakan Privasi</a>
+            </div>
         </div>
     </div>
 </footer> 
