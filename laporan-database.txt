@@ -1,0 +1,102 @@
+LAPORAN DATABASE SAHABATNEWS
+============================
+
+Tanggal: [ISI TANGGAL HARI INI]
+
+1. KONFIGURASI DATABASE
+-----------------------
+- **Default Connection:** Menggunakan koneksi sesuai environment (`DB_CONNECTION`), default: `sqlite`.
+- **Jenis Koneksi yang Didukung:**
+  - SQLite, MySQL, MariaDB, PostgreSQL, SQL Server
+- **Pengaturan Redis:**
+  - Redis digunakan untuk cache dan queue (opsional, tergantung environment)
+- **File Konfigurasi:**
+  - config/database.php
+
+2. STRUKTUR TABEL UTAMA
+-----------------------
+- **users**: Data user, login, dan autentikasi
+- **roles**: Tipe user (admin, editor, user)
+- **categories**: Kategori berita
+- **posts**: Berita/artikel
+- **comments**: Komentar pada post
+- **logs**: Log aktivitas admin/editor
+- **pages**: Halaman statis (about, contact, dsb)
+- **sessions**: Data session user
+- **password_reset_tokens**: Token reset password
+- **jobs, job_batches, failed_jobs**: Queue dan batch job
+
+3. DETAIL STRUKTUR TABEL
+------------------------
+- **users**: id, name, email, password, email_verified_at, role_id, timestamps
+- **roles**: id, name, timestamps
+- **categories**: id, name, slug, color, timestamps
+- **posts**: id, user_id, category_id, title, slug, content, image, status, published_at, timestamps
+- **comments**: id, post_id, user_id, content, approved, timestamps
+- **logs**: id, user_id, action, loggable_id, loggable_type, timestamps
+- **pages**: id, slug, title, content, meta_title, meta_description, timestamps
+- **sessions**: id, user_id, ip_address, user_agent, payload, last_activity
+- **password_reset_tokens**: email, token, created_at
+- **jobs**: id, queue, payload, attempts, reserved_at, available_at, created_at
+- **job_batches**: id, name, total_jobs, pending_jobs, failed_jobs, failed_job_ids, options, cancelled_at, created_at, finished_at
+- **failed_jobs**: id, uuid, connection, queue, payload, exception, failed_at
+
+4. DATA AWAL (SEEDER)
+---------------------
+- **RoleSeeder:** admin, editor, user
+- **CategorySeeder:** Indonesia News, World News, Politics, Economics, Sports, Science, IT, Nature
+- **UserSeeder:** Admin, Editor, User Biasa, beberapa user dummy
+- **PostSeeder:** Beberapa post dummy di berbagai kategori
+- **PageSeeder:** Halaman about-us, contact-info
+
+5. CATATAN
+----------
+- Struktur tabel dapat berkembang sesuai kebutuhan fitur.
+- Seeder memudahkan testing dan pengisian data awal.
+- Pastikan migrasi dan seeder dijalankan sebelum aplikasi digunakan.
+
+6. PENJELASAN FUNGSI & RELASI TIAP TABEL
+----------------------------------------
+- **users**
+  - Menyimpan data user (admin, editor, user biasa).
+  - Relasi: belongsTo `roles`, hasMany `posts`, hasMany `comments`.
+  - Fungsi tambahan: pengecekan role (isAdmin, isEditor, hasRole, hasAnyRole).
+
+- **roles**
+  - Menyimpan tipe user (admin/editor/user).
+  - Relasi: hasMany `users`.
+
+- **categories**
+  - Menyimpan kategori berita.
+  - Relasi: hasMany `posts`.
+
+- **posts**
+  - Menyimpan berita/artikel.
+  - Relasi: belongsTo `user`, belongsTo `category`, hasMany `comments` (hanya yang approved).
+  - Fitur: slug otomatis unik untuk URL, published_at cast ke datetime.
+
+- **comments**
+  - Menyimpan komentar pada post.
+  - Relasi: belongsTo `post`, belongsTo `user`.
+  - Fitur: hanya komentar yang approved yang ditampilkan.
+
+- **pages**
+  - Menyimpan halaman statis (about, contact, dsb).
+  - Tidak ada relasi khusus.
+
+- **logs**
+  - Menyimpan log aktivitas admin/editor (misal: create/update post/kategori).
+  - Relasi: user_id ke users, loggable_id & loggable_type (morphs) ke entitas terkait (post, category, dsb).
+
+- **sessions**
+  - Menyimpan data session user yang login.
+
+- **password_reset_tokens**
+  - Menyimpan token reset password user.
+
+- **jobs, job_batches, failed_jobs**
+  - Menyimpan antrian (queue) dan batch job untuk proses background (misal: kirim email, proses berat).
+
+---
+
+Laporan ini dibuat otomatis oleh sistem berdasarkan struktur migration dan seeder pada project SahabatNews. 

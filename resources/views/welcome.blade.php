@@ -48,7 +48,7 @@
                 <!-- Berita Utama (Ambil post pertama dari collection) -->
                 @php $mainPost = $posts->first(); @endphp
                 <a href="{{ route('posts.show', $mainPost) }}" class="block relative rounded-2xl overflow-hidden min-h-[160px] sm:min-h-[320px] md:min-h-[340px] flex flex-col justify-end bg-gray-800 hover:shadow-lg transition duration-300 ease-in-out group">
-                    <img src="{{ $mainPost->image ? asset('storage/' . $mainPost->image) : 'https://via.placeholder.com/600x400?text=No+Image' }}" alt="{{ $mainPost->title }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 transition-opacity duration-300" />
+                    <img src="{{ $mainPost->image ? asset('storage/' . $mainPost->image) : 'https://via.placeholder.com/600x400?text=No+Image' }}" alt="{{ $mainPost->title }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 transition-opacity duration-300" loading="lazy" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div> {{-- Gradient overlay --}}
                     <div class="relative z-10 p-2 sm:p-6">
                         @if($mainPost->category)
@@ -92,6 +92,61 @@
             <p class="text-center text-gray-500">Belum ada berita terbaru.</p>
         @endif
 
+        @if($bottomPosts->isNotEmpty())
+            <div id="load-more-grid" class="w-full max-w-7xl mx-auto">
+                <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
+                    @foreach($bottomPosts as $post)
+                        <a href="{{ route('posts.show', $post) }}" class="bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
+                            <img src="{{ $post->image ? asset('storage/' . $post->image) : 'https://via.placeholder.com/400x250?text=No+Image' }}" alt="{{ $post->title }}" class="w-full h-40 object-cover" loading="lazy">
+                            <div class="p-4 flex-1 flex flex-col">
+                                <span class="inline-block {{ $post->category->color ?? 'bg-gray-500' }} text-white text-xs font-semibold px-2 py-1 rounded mb-2">{{ $post->category->name }}</span>
+                                <div class="font-semibold text-base mb-1 group-hover:text-indigo-600 transition">{{ $post->title }}</div>
+                                <div class="text-xs text-gray-500">{{ $post->published_at ? $post->published_at->format('d M Y') : '-' }}</div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+                <div class="flex justify-center mt-6">
+                    <button id="load-more-btn" class="px-6 py-2 rounded-full bg-black text-white font-semibold hover:bg-gray-800 transition">
+                        Muat Berita Lain
+                    </button>
+                </div>
+            </div>
+        @endif
+
     </div> {{-- End of container --}}
 
 </x-app-layout>
+
+@push('scripts')
+<script>
+let page = 2;
+document.getElementById('load-more-btn')?.addEventListener('click', function() {
+    fetch('/load-more-posts?page=' + page)
+        .then(res => res.json())
+        .then(posts => {
+            if(posts.length === 0) {
+                document.getElementById('load-more-btn').disabled = true;
+                document.getElementById('load-more-btn').innerText = 'Tidak ada berita lagi';
+                return;
+            }
+            let grid = document.querySelector('#load-more-grid .grid');
+            posts.forEach(post => {
+                let card = document.createElement('a');
+                card.href = '/posts/' + post.slug;
+                card.className = 'bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group';
+                card.innerHTML = `
+                    <img src="${post.image ? '/storage/' + post.image : 'https://via.placeholder.com/400x250?text=No+Image'}" alt="${post.title}" class="w-full h-40 object-cover" loading="lazy">
+                    <div class=\"p-4 flex-1 flex flex-col\">
+                        <span class=\"inline-block bg-gray-500 text-white text-xs font-semibold px-2 py-1 rounded mb-2\">${post.category ? post.category.name : ''}</span>
+                        <div class=\"font-semibold text-base mb-1 group-hover:text-indigo-600 transition\">${post.title}</div>
+                        <div class=\"text-xs text-gray-500\">${post.published_at ? new Date(post.published_at).toLocaleDateString('id-ID') : '-'}</div>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            page++;
+        });
+});
+</script>
+@endpush

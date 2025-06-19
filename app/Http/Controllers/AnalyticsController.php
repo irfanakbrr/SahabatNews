@@ -47,6 +47,15 @@ class AnalyticsController extends Controller
             $currentDate->addMonth();
         }
 
+        // Hitung pengunjung unik hari ini (berdasarkan IP address di tabel visitors)
+        $todayVisitors = 0;
+        if (\Schema::hasTable('visitors')) {
+            $todayVisitors = \DB::table('visitors')
+                ->whereDate('created_at', \Carbon\Carbon::today())
+                ->distinct('ip_address')
+                ->count('ip_address');
+        }
+
         // Anda juga bisa menambahkan data lain di sini jika perlu
         // $totalViews = Post::sum('view_count');
 
@@ -77,7 +86,8 @@ class AnalyticsController extends Controller
             'totalPublishedPosts', 
             'totalViewsAllPosts',
             'trendLabels',
-            'trendData'
+            'trendData',
+            'todayVisitors'
             // 'chartLabels', 'chartData', 'chartColors' // Uncomment jika ingin chart di analytics juga
         ));
     }

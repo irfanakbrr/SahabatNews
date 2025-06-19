@@ -132,6 +132,11 @@
                 </aside>
                 <!-- / Menu -->
 
+                <!-- Toast Container -->
+                <div class="position-fixed top-0 end-0 p-3" style="z-index: 1055">
+                    <div id="toastContainer"></div>
+                </div>
+
                 <!-- Layout container -->
                 <div class="layout-page flex-grow-1 d-flex flex-column min-vh-100">
                     <!-- Navbar -->
@@ -175,7 +180,7 @@
                                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                     <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
                                         <div class="avatar avatar-online">
-                                            <img src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://via.placeholder.com/40/696cff/fff?text='.strtoupper(substr(Auth::user()->name, 0, 1)) }}" alt class="w-px-40 h-auto rounded-circle" />
+                                            <img src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://via.placeholder.com/40/696cff/fff?text='.strtoupper(substr(Auth::user()->name, 0, 1)) }}" alt class="w-px-40 h-auto rounded-circle" loading="lazy" />
                                         </div>
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
@@ -184,7 +189,7 @@
                                                 <div class="d-flex">
                                                     <div class="flex-shrink-0 me-3">
                                                         <div class="avatar avatar-online">
-                                                            <img src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://via.placeholder.com/40/696cff/fff?text='.strtoupper(substr(Auth::user()->name, 0, 1)) }}" alt class="w-px-40 h-auto rounded-circle" />
+                                                            <img src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://via.placeholder.com/40/696cff/fff?text='.strtoupper(substr(Auth::user()->name, 0, 1)) }}" alt class="w-px-40 h-auto rounded-circle" loading="lazy" />
                                                         </div>
                                                     </div>
                                                     <div class="flex-grow-1">
@@ -234,14 +239,14 @@
                     <div class="content-wrapper flex-grow-1">
                         <!-- Content -->
                         <div class="container-xxl flex-grow-1 container-p-y">
-                            @isset($header)
+                            @hasSection('header')
                             <div class="row mb-4">
                                 <div class="col">
                                     <!-- Ganti kelas text-gray-800 dark:text-gray-200 dengan kelas Bootstrap jika perlu -->
                                     <h4 class="fw-bold py-3 mb-0">@yield('header')</h4> 
                                 </div>
                             </div>
-                            @endisset
+                            @endif
 
                             @if (session('success'))
                                 <div class="alert alert-success alert-dismissible fade show" role="alert">

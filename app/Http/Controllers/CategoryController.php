@@ -15,8 +15,10 @@ class CategoryController extends Controller
         // Ambil posts untuk kategori ini yang sudah published
         $posts = $category->posts()->where('status', 'published')->latest('published_at')->paginate(9); // 9 post per halaman
 
-        // Ambil semua kategori untuk filter
-        $categories = Category::orderBy('name')->get();
+        // Ambil semua kategori untuk filter, gunakan cache selama 1 jam
+        $categories = \Cache::remember('categories', 3600, function() {
+            return \App\Models\Category::orderBy('name')->get();
+        });
 
         return view('category', compact('category', 'posts', 'categories'));
     }

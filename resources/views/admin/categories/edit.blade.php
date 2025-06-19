@@ -3,7 +3,7 @@
 @section('header')
     <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
         {{ __('Edit Kategori') }}: <span class="font-normal">{{ $category->name }}</span>
-    </h2>
+        </h2>
 @endsection
 
 @section('content')

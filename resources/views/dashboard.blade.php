@@ -5,9 +5,9 @@
 @endsection
 
 @section('content')
-<div class="row">
+<div class="row mb-3">
     <!-- Congratulations Card -->
-    <div class="col-lg-8 mb-4 order-0">
+    <div class="col-lg-8">
         <div class="card">
             <div class="d-flex align-items-end row">
                 <div class="col-sm-7">
@@ -19,17 +19,22 @@
                         <a href="{{ route('dashboard.posts.create') }}" class="btn btn-sm btn-outline-primary">Buat Artikel Baru</a>
                     </div>
                 </div>
-                <div class="col-sm-5 text-center text-sm-left">
-                    <div class="card-body pb-0 px-0 px-md-4">
-                        <img src="https://demos.themeselection.com/sneat-bootstrap-html-admin-template-free/assets/img/illustrations/man-with-laptop-light.png" height="140" alt="View Badge User" data-app-dark-img="illustrations/man-with-laptop-dark.png" data-app-light-img="illustrations/man-with-laptop-light.png">
+                <div class="col-sm-5 d-flex align-items-center justify-content-center" style="min-height: 180px;">
+                    <div class="card-body px-0 px-md-4 d-flex justify-content-center align-items-center h-100 m-0">
+                        <img 
+                            src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D8ABC&color=fff' }}" 
+                            height="100" 
+                            alt="Avatar User" 
+                            class="rounded-circle shadow"
+                            style="object-fit:cover; width:100px; height:100px;"
+                        >
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     <!-- Statistics Cards -->
-    <div class="col-lg-4 col-md-4 order-1">
+    <div class="col-lg-4">
         <div class="row">
             <div class="col-12 mb-4">
                 <div class="card">
@@ -44,7 +49,7 @@
                     </div>
                 </div>
             </div>
-             <div class="col-12 mb-4">
+            <div class="col-12 mb-4">
                 <div class="card">
                     <div class="card-body">
                         <div class="card-title d-flex align-items-start justify-content-between">
@@ -76,7 +81,7 @@
 
 <div class="row">
     <!-- Artikel Terpublish per Kategori -->
-    <div class="col-md-6 col-lg-8 mb-4">
+    <div class="col-md-12 col-lg-6 mb-4">
         <div class="card h-100">
             <div class="card-header d-flex align-items-center justify-content-between">
                 <h5 class="card-title m-0 me-2">Artikel Terpublish per Kategori</h5>
@@ -93,7 +98,7 @@
     <!--/ Artikel Terpublish per Kategori -->
 
     <!-- Statistik Tambahan (Total Views & Draft) -->
-    <div class="col-md-6 col-lg-4 mb-4">
+    <div class="col-md-12 col-lg-6 mb-4">
         <div class="card mb-4">
             <div class="card-body">
                 <div class="card-title d-flex align-items-start justify-content-between">

@@ -10,15 +10,15 @@
         <h5 class="mb-0">Daftar Artikel</h5>
         <a href="{{ route('dashboard.posts.create') }}" class="btn btn-primary btn-sm">
             <i class="bx bx-plus me-1"></i> Tambah Artikel
-        </a>
-    </div>
+            </a>
+        </div>
     <div class="card-body">
         {{-- Notifikasi sudah dihandle di layouts.admin --}}
 
         <div class="table-responsive text-nowrap">
             <table class="table table-hover">
                 <thead class="table-light">
-                    <tr>
+                                <tr>
                         <th>Judul</th>
                         <th>Kategori</th>
                         <th>Author</th>
@@ -26,16 +26,16 @@
                         <th>Tanggal Publish</th>
                         <th>Views</th>
                         <th class="text-center">Aksi</th>
-                    </tr>
-                </thead>
+                                </tr>
+                            </thead>
                 <tbody class="table-border-bottom-0">
-                    @forelse ($posts as $post)
-                        <tr>
+                                @forelse ($posts as $post)
+                                    <tr>
                             <td>
                                 <a href="{{ route('posts.show', $post->slug) }}" target="_blank" title="{{ $post->title }}">
                                     <strong>{{ Str::limit($post->title, 40) }}</strong>
                                 </a>
-                            </td>
+                                        </td>
                             <td>{{ $post->category->name ?? '-' }}</td>
                             <td>{{ $post->user->name ?? '-' }}</td>
                             <td>
@@ -44,7 +44,7 @@
                                 @else
                                     <span class="badge bg-warning">Draft</span>
                                 @endif
-                            </td>
+                                        </td>
                             <td>{{ $post->published_at ? $post->published_at->format('d M Y, H:i') : '-' }}</td>
                             <td>{{ number_format($post->view_count ?? 0) }}</td>
                             <td class="text-center">
@@ -53,30 +53,30 @@
                                         <i class="bx bx-edit-alt"></i>
                                     </a>
                                     <form action="{{ route('dashboard.posts.destroy', $post) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus artikel ini?');">
-                                        @csrf
-                                        @method('DELETE')
+                                                @csrf
+                                                @method('DELETE')
                                         <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
                                             <i class="bx bx-trash"></i>
                                         </button>
-                                    </form>
+                                            </form>
                                 </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
+                                        </td>
+                                    </tr>
+                                @empty
+                                    <tr>
                             <td colspan="7" class="text-center py-4">
-                                Belum ada artikel.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
-        </div>
-    </div>
+                                            Belum ada artikel.
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    </div>
     @if ($posts->hasPages())
         <div class="card-footer">
             {{ $posts->links('pagination::bootstrap-5') }} {{-- Gunakan view paginasi bootstrap-5 --}}
         </div>
     @endif
-</div>
+    </div>
 @endsection 

@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Auth\SocialiteController;
 use App\Http\Controllers\AnalyticsController; // Tambahkan use
 use App\Http\Controllers\CommentController; // Tambahkan ini di atas jika belum ada
+use App\Http\Controllers\AiGenerationController; // Tambahkan controller AI
 use Illuminate\Support\Str;
 use App\Models\Category; // Pastikan ini ada
 
@@ -26,16 +27,16 @@ use App\Models\Category; // Pastikan ini ada
 
 // Halaman Publik
 Route::get('/', function () {
-    // TODO: Ambil data post terbaru untuk homepage
-    $posts = \App\Models\Post::where('status', 'published')->latest('published_at')->take(5)->get();
-    // Ambil juga 4 post sampingan (contoh: acak atau terbaru selain 5 utama)
-    $sidePosts = \App\Models\Post::where('status', 'published')
-                    ->whereNotIn('id', $posts->pluck('id')) // Jangan tampilkan yang sudah di list utama
-                    ->latest('published_at')
-                    ->take(3) // Ambil 3 untuk sisi kanan
-                    ->get();
-    $categories = Category::orderBy('name')->get(); // Ambil semua kategori
-    return view('welcome', compact('posts', 'sidePosts', 'categories')); // Kirim categories ke view
+    // Ambil 11 post terbaru (5 utama, 3 samping, 3 bawah)
+    $posts = \App\Models\Post::where('status', 'published')->latest('published_at')->take(11)->get();
+    $mainPost = $posts->first();
+    $sidePosts = $posts->slice(1, 3);
+    $bottomPosts = $posts->slice(4, 3); // 3 post berikutnya
+    // Gunakan cache untuk kategori
+    $categories = \Cache::remember('categories', 3600, function() {
+        return \App\Models\Category::orderBy('name')->get();
+    });
+    return view('welcome', compact('posts', 'sidePosts', 'categories', 'mainPost', 'bottomPosts'));
 })->name('home');
 
 Route::get('/about', function () { return view('about'); })->name('about');
@@ -77,6 +78,10 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         Route::get('posts/{post}/edit', [PostController::class, 'editAdmin'])->name('posts.edit');
         Route::patch('posts/{post}', [PostController::class, 'updateAdmin'])->name('posts.update');
         Route::delete('posts/{post}', [PostController::class, 'destroyAdmin'])->name('posts.destroy');
+
+        // Route untuk AI Content Generation
+        Route::post('/generate-image', [AiGenerationController::class, 'generateImage'])->name('image.generate');
+        Route::post('/generate-article', [AiGenerationController::class, 'generateArticle'])->name('ai.generate.article');
     });
 
     // Manajemen Kategori & Komentar (Hanya Admin)
@@ -84,6 +89,7 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         Route::resource('categories', AdminCategoryController::class)->except(['show']);
         Route::resource('users', AdminUserController::class)->except(['show']);
         Route::resource('comments', App\Http\Controllers\Admin\CommentController::class)->except(['show']);
+        Route::patch('comments/{comment}/approve', [App\Http\Controllers\Admin\CommentController::class, 'approve'])->name('comments.approve');
         Route::resource('pages', App\Http\Controllers\Admin\PageController::class)->only(['index', 'edit', 'update']);
         Route::post('tinymce/upload', [App\Http\Controllers\Admin\TinyMCEController::class, 'uploadImage'])->name('tinymce.upload');
     });
@@ -91,35 +97,39 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
 
 // Route global agar route('dashboard') selalu ada
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
+    // Cache statistik dashboard selama 5 menit
+    $dashboardStats = \Cache::remember('dashboard_stats', 300, function() {
     $postCount = \App\Models\Post::count();
     $userCount = \App\Models\User::count();
     $categoryCount = \App\Models\Category::count();
     $totalViews = \App\Models\Post::sum('view_count');
     $draftPostsCount = \App\Models\Post::where('status', 'draft')->count();
-
     // Data untuk chart Artikel Terpublish per Kategori
     $publishedPostsByCategory = \App\Models\Category::withCount([
         'posts' => fn($query) => $query->where('status', 'published')
     ])->having('posts_count', '>', 0)->orderBy('posts_count', 'desc')->get();
-
     $chartLabels = $publishedPostsByCategory->pluck('name');
     $chartData = $publishedPostsByCategory->pluck('posts_count');
     $chartColors = $publishedPostsByCategory->map(function ($category) {
-        // Logika mapping warna sederhana (sesuaikan dengan kebutuhan Anda)
-        if (Str::startsWith($category->color, '#') || Str::startsWith($category->color, 'rgb')) {
+            if (\Illuminate\Support\Str::startsWith($category->color, '#') || \Illuminate\Support\Str::startsWith($category->color, 'rgb')) {
             return $category->color;
-        } elseif (Str::startsWith($category->color, 'bg-')) {
+            } elseif (\Illuminate\Support\Str::startsWith($category->color, 'bg-')) {
             $colorMap = [
                 'bg-red-500' => '#EF4444', 'bg-blue-500' => '#3B82F6', 'bg-green-500' => '#22C55E',
                 'bg-yellow-500' => '#EAB308', 'bg-indigo-500' => '#6366F1', 'bg-purple-500' => '#8B5CF6',
                 'bg-pink-500' => '#EC4899', 'bg-gray-500' => '#6B7280', 'bg-sky-500' => '#0EA5E9',
                 'bg-emerald-500' => '#10B981', 'bg-rose-500' => '#F43F5E', 'bg-orange-500' => '#F97316',
             ];
-            return $colorMap[$category->color] ?? '#' . substr(md5(rand()), 0, 6); // Warna acak jika tidak ketemu
+                return $colorMap[$category->color] ?? '#' . substr(md5(rand()), 0, 6);
         }
-        return '#' . substr(md5($category->name), 0, 6); // Warna default acak berdasarkan nama
+            return '#' . substr(md5($category->name), 0, 6);
+        });
+        return compact(
+            'postCount', 'userCount', 'categoryCount', 'totalViews', 'draftPostsCount',
+            'chartLabels', 'chartData', 'chartColors'
+        );
     });
-
+    extract($dashboardStats);
     return view('dashboard', compact(
         'postCount', 'userCount', 'categoryCount', 'totalViews', 'draftPostsCount',
         'chartLabels', 'chartData', 'chartColors'
@@ -138,5 +148,18 @@ Route::middleware(['auth', 'verified'])->delete('/profile', [\App\Http\Controlle
 // Socialite Routes
 Route::get('/login/{provider}', [SocialiteController::class, 'redirectToProvider'])->name('socialite.redirect');
 Route::get('/login/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
+
+Route::get('/load-more-posts', function (\Illuminate\Http\Request $request) {
+    $page = $request->input('page', 2);
+    $perPage = 5;
+    $skip = ($page - 1) * $perPage + 7; // 7 = jumlah artikel awal yang sudah tampil
+    $posts = \App\Models\Post::where('status', 'published')
+        ->latest('published_at')
+        ->skip($skip)
+        ->take($perPage)
+        ->with('category')
+        ->get();
+    return response()->json($posts);
+});
 
 require __DIR__.'/auth.php';

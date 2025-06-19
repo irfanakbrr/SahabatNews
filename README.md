@@ -64,4 +64,31 @@ If you discover a security vulnerability within Laravel, please send an e-mail t
 ## License
 
 The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+
+## Troubleshooting Gambar Tidak Muncul (403 Forbidden) di Storage Laravel
+
+Jika gambar yang diupload tidak muncul dan saat diakses langsung URL-nya muncul 403 Forbidden, lakukan langkah berikut:
+
+1. **Buat ulang symlink storage:**
+   ```sh
+   php artisan storage:link
+   ```
+2. **Set permission folder agar bisa dibaca web server:**
+   ```sh
+   chmod -R 775 storage
+   chmod -R 775 public/storage
+   ```
+   Jika masih error, untuk development bisa gunakan (tidak disarankan untuk production!):
+   ```sh
+   chmod -R 777 storage
+   chmod -R 777 public/storage
+   ```
+3. **Cek folder public/storage**
+   Pastikan itu adalah symlink ke ../storage/app/public. Jika belum, hapus folder public/storage lalu ulangi langkah 1.
+
+4. **Cek URL gambar**
+   Buka di browser: http://localhost:8000/storage/post_images/namafile.jpg
+
+Jika masih bermasalah, cek konfigurasi web server (Apache/Nginx) dan pastikan tidak ada aturan yang memblokir akses ke /storage.
+
 # SahabatNews

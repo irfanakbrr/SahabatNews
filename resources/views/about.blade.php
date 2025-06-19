@@ -7,7 +7,7 @@
         <div class="prose max-w-none dark:prose-invert">
             <h1 class="text-center text-2xl sm:text-3xl font-bold mb-6">Tentang SahabatNews</h1>
 
-            <img src="https://via.placeholder.com/800x300" alt="Tim SahabatNews" class="rounded-lg mb-6 w-full object-cover h-48 sm:h-64">
+            <img src="https://via.placeholder.com/800x300" alt="Tim SahabatNews" class="rounded-lg mb-6 w-full object-cover h-48 sm:h-64" loading="lazy">
 
             <h2 class="text-xl sm:text-2xl font-semibold mb-3">Visi Kami</h2>
             <p>Menjadi sumber berita terpercaya dan relevan bagi masyarakat Indonesia, menyajikan informasi akurat, mendalam, dan berimbang untuk mencerahkan dan memberdayakan.</p>

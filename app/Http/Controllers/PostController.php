@@ -62,7 +62,8 @@ class PostController extends Controller
     public function createAdmin()
     {
         $categories = Category::orderBy('name')->get();
-        return view('admin.posts.create', compact('categories'));
+        $post = new Post(); // Buat instance Post baru
+        return view('admin.posts.create', compact('categories', 'post'));
     }
 
     public function storeAdmin(Request $request)

@@ -43,12 +43,12 @@
                         <h6 class="card-title mb-0">Pengunjung Hari Ini</h6>
                         <span class="badge bg-label-success p-2"><i class="bx bx-user-plus fs-4"></i></span>
                     </div>
-                    <h3 class="fw-semibold d-block my-2">(Placeholder)</h3>
-                    <small class="text-muted">Integrasi analytics diperlukan</small>
+                    <h3 class="fw-semibold d-block my-2">{{ number_format($todayVisitors ?? 0) }}</h3>
+                    <small class="text-muted">Pengunjung unik hari ini</small>
                 </div>
             </div>
         </div>
-    </div>
+        </div>
 
     <!-- Tren Publikasi Artikel per Bulan -->
     <div class="row">
@@ -76,37 +76,37 @@
             <h5 class="card-title mb-0">Top 10 Artikel Populer</h5>
         </div>
         <div class="card-body p-0">
-            @if ($popularPosts->isNotEmpty())
+                     @if ($popularPosts->isNotEmpty())
                 <div class="table-responsive text-nowrap">
                     <table class="table table-hover mb-0">
                         <thead class="table-light">
-                            <tr>
+                                    <tr>
                                 <th class="ps-3">Rank</th>
                                 <th>Judul Artikel</th>
                                 <th class="text-end pe-3">Jumlah Views</th>
-                            </tr>
-                        </thead>
+                                    </tr>
+                                </thead>
                         <tbody class="table-border-bottom-0">
-                            @foreach ($popularPosts as $index => $post)
-                                <tr>
+                                    @foreach ($popularPosts as $index => $post)
+                                        <tr>
                                     <td class="ps-3"><strong>{{ $index + 1 }}</strong></td>
                                     <td>
                                         <a href="{{ route('posts.show', $post->slug) }}" target="_blank" title="{{ $post->title }}" class="text-dark hover-primary">
                                             {{ Str::limit($post->title, 70) }}
-                                        </a>
-                                    </td>
+                                                </a>
+                                            </td>
                                     <td class="text-end pe-3">{{ number_format($post->view_count ?? 0) }}</td>
-                                </tr>
-                            @endforeach
-                        </tbody>
-                    </table>
-                </div>
-            @else
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                     @else
                 <p class="text-muted p-3 text-center">Belum ada data view artikel populer.</p>
-            @endif
+                     @endif
         </div>
     </div>
-@endsection
+@endsection 
 
 @push('page-scripts')
 @if(!empty($trendLabels) && !empty($trendData))

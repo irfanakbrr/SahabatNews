@@ -2,8 +2,8 @@
 
 @section('header')
     <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-        {{ __('Moderasi Komentar') }}
-    </h2>
+            {{ __('Moderasi Komentar') }}
+        </h2>
 @endsection
 
 @section('content')
@@ -15,7 +15,7 @@
                     <span class="block sm:inline">{{ session('success') }}</span>
                 </div>
             @endif
-            @if (session('error'))
+             @if (session('error'))
                 <div class="mb-6 bg-red-50 dark:bg-red-700 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-100 px-4 py-3 rounded-md relative" role="alert">
                     <span class="block sm:inline">{{ session('error') }}</span>
                 </div>
@@ -56,7 +56,7 @@
                                         </td>
                                         <td>{{ $comment->created_at->format('d M Y, H:i') }}</td>
                                         <td>
-                                            @if ($comment->approved)
+                                             @if ($comment->approved)
                                                 <span class="badge bg-success">Disetujui</span>
                                             @else
                                                 <span class="badge bg-warning">Pending</span>
@@ -64,7 +64,7 @@
                                         </td>
                                         <td class="text-center">
                                             <div class="d-inline-flex">
-                                                @unless($comment->approved)
+                                            @unless($comment->approved)
                                                     <form action="{{ route('dashboard.comments.approve', $comment) }}" method="POST" class="d-inline me-1">
                                                         @csrf
                                                         @method('PATCH')

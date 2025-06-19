@@ -2,8 +2,9 @@ import './bootstrap';
 
 import Alpine from 'alpinejs';
 
-// Import Bootstrap JS (Popper.js sudah otomatis dihandle oleh Bootstrap jika tersedia)
-import 'bootstrap';
+// Import Bootstrap JS
+import * as bootstrap from 'bootstrap';
+window.bootstrap = bootstrap;
 
 // Import Chart.js
 import { Chart, registerables } from 'chart.js';
