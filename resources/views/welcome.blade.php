@@ -48,7 +48,7 @@
                 <!-- Berita Utama (Ambil post pertama dari collection) -->
                 @php $mainPost = $posts->first(); @endphp
                 <a href="{{ route('posts.show', $mainPost) }}" class="block relative rounded-2xl overflow-hidden min-h-[160px] sm:min-h-[320px] md:min-h-[340px] flex flex-col justify-end bg-gray-800 hover:shadow-lg transition duration-300 ease-in-out group">
-                    <img src="{{ $mainPost->image ? asset('storage/' . $mainPost->image) : 'https://via.placeholder.com/600x400?text=No+Image' }}" alt="{{ $mainPost->title }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 transition-opacity duration-300" loading="lazy" />
+                    <img src="{{ $mainPost->image ? $mainPost->image : 'https://via.placeholder.com/600x400?text=No+Image' }}" alt="{{ $mainPost->title }}" class="absolute inset-0 w-full h-full object-cover opacity-80 group-hover:opacity-70 transition-opacity duration-300" loading="lazy" />
                     <div class="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent"></div> {{-- Gradient overlay --}}
                     <div class="relative z-10 p-2 sm:p-6">
                         @if($mainPost->category)
@@ -97,7 +97,7 @@
                 <div class="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 grid-news">
                     @foreach($bottomPosts as $post)
                         <a href="{{ route('posts.show', $post) }}" class="bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group">
-                            <img src="{{ $post->image ? asset('storage/' . $post->image) : 'https://via.placeholder.com/400x250?text=No+Image' }}" alt="{{ $post->title }}" class="w-full h-40 object-cover" loading="lazy">
+                            <img src="{{ $post->image ? $post->image : 'https://via.placeholder.com/400x250?text=No+Image' }}" alt="{{ $post->title }}" class="w-full h-40 object-cover" loading="lazy">
                             <div class="p-4 flex-1 flex flex-col">
                                 <span class="inline-block {{ $post->category->color ?? 'bg-gray-500' }} text-white text-xs font-semibold px-2 py-1 rounded mb-2">{{ $post->category->name }}</span>
                                 <div class="font-semibold text-base mb-1 group-hover:text-indigo-600 transition">{{ $post->title }}</div>

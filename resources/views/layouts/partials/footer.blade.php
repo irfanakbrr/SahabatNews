@@ -33,10 +33,10 @@
                 <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-4">Kategori Populer</h3>
                  {{-- TODO: Ganti dengan kategori dinamis nanti --}}
                 <ul class="space-y-3">
-                    <li><a href="#" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Politik</a></li>
-                    <li><a href="#" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Ekonomi</a></li>
-                    <li><a href="#" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Teknologi</a></li>
-                    <li><a href="#" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Olahraga</a></li>
+                    <li><a href="{{ route('category.show', ['category' => 'politics']) }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Politics</a></li>
+                    <li><a href="{{ route('category.show', ['category' => 'economics']) }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Economics</a></li>
+                    <li><a href="{{ route('category.show', ['category' => 'it']) }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">IT</a></li>
+                    <li><a href="{{ route('category.show', ['category' => 'sports']) }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Sports</a></li>
                 </ul>
             </div>
 

@@ -5,7 +5,7 @@
     <article class="max-w-3xl mx-auto prose lg:prose-xl px-4 py-8 sm:py-12">
         <!-- Gambar Utama -->
         @if($post->image)
-            <img src="{{ asset('storage/' . $post->image) }}" alt="{{ $post->title }}" class="rounded-lg mb-4 sm:mb-6 w-full object-cover aspect-video" loading="lazy">
+            <img src="{{ $post->image }}" alt="{{ $post->title }}" class="rounded-lg mb-4 sm:mb-6 w-full object-cover aspect-video" loading="lazy">
         @else
              <img src="https://via.placeholder.com/1200x600?text=No+Image" alt="{{ $post->title }}" class="rounded-lg mb-4 sm:mb-6 w-full object-cover aspect-video" loading="lazy">
         @endif
@@ -104,7 +104,7 @@
                 @foreach ($relatedPosts as $relatedPost)
                     <div class="bg-white rounded-lg shadow-md overflow-hidden flex flex-col">
                          <a href="{{ route('posts.show', $relatedPost) }}">
-                             <img src="{{ $relatedPost->image ? Storage::url($relatedPost->image) : 'https://via.placeholder.com/300x150?text=No+Image' }}" alt="{{ $relatedPost->title }}" class="w-full object-cover h-32 sm:h-40" loading="lazy">
+                             <img src="{{ $relatedPost->image ? $relatedPost->image : 'https://via.placeholder.com/300x150?text=No+Image' }}" alt="{{ $relatedPost->title }}" class="w-full object-cover h-32 sm:h-40" loading="lazy">
                          </a>
                          <div class="p-4 flex flex-col flex-1">
                              <h3 class="text-base font-semibold mb-2 flex-1">

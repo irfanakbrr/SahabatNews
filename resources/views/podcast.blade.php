@@ -12,7 +12,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <!-- Contoh Episode 1 -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col hover:scale-105 transition-transform">
-                <img src="https://via.placeholder.com/400x200?text=Podcast+Episode+1" alt="Episode 1" class="rounded-xl mb-4 w-full object-cover h-44 shadow">
+                <img src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=400&q=80" alt="Episode 1" class="rounded-xl mb-4 w-full object-cover h-44 shadow">
                 <h2 class="text-xl font-bold mb-2 dark:text-white">Judul Episode Podcast 1</h2>
                 <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 flex-1">Deskripsi singkat tentang episode podcast ini. Membahas tentang topik A, B, dan C.</p>
                 <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -23,7 +23,7 @@
             </div>
             <!-- Contoh Episode 2 -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col hover:scale-105 transition-transform">
-                <img src="https://via.placeholder.com/400x200?text=Podcast+Episode+2" alt="Episode 2" class="rounded-xl mb-4 w-full object-cover h-44 shadow">
+                <img src="https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=400&q=80" alt="Episode 2" class="rounded-xl mb-4 w-full object-cover h-44 shadow">
                 <h2 class="text-xl font-bold mb-2 dark:text-white">Judul Episode Podcast 2</h2>
                 <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 flex-1">Pembahasan menarik lainnya di episode kedua. Fokus pada D dan E.</p>
                 <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
@@ -34,7 +34,7 @@
             </div>
             <!-- Contoh Episode 3 -->
             <div class="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-6 flex flex-col hover:scale-105 transition-transform">
-                <img src="https://via.placeholder.com/400x200?text=Podcast+Episode+3" alt="Episode 3" class="rounded-xl mb-4 w-full object-cover h-44 shadow">
+                <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80" alt="Episode 3" class="rounded-xl mb-4 w-full object-cover h-44 shadow">
                 <h2 class="text-xl font-bold mb-2 dark:text-white">Judul Episode Podcast 3</h2>
                 <p class="text-gray-600 dark:text-gray-300 text-sm mb-4 flex-1">Episode terbaru dengan bintang tamu spesial membahas F.</p>
                 <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
