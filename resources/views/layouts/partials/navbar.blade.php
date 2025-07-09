@@ -19,6 +19,12 @@
                     <x-nav-link href="{{ route('about') }}" :active="request()->routeIs('about')">
                         {{ __('About Us') }}
                     </x-nav-link>
+                    <x-nav-link href="{{ route('quran.index') }}" :active="request()->routeIs('quran.*')">
+                        <i class="bx bx-book-open mr-1"></i> {{ __('Al-Qur\'an') }}
+                    </x-nav-link>
+                    <x-nav-link href="{{ route('prayer-times.index') }}" :active="request()->routeIs('prayer-times.*')">
+                        <i class="bx bx-time-five mr-1"></i> {{ __('Jadwal Sholat') }}
+                    </x-nav-link>
                     <x-nav-link href="{{ route('podcast') }}" :active="request()->routeIs('podcast')">
                         {{ __('Podcast') }}
                     </x-nav-link>
@@ -52,12 +58,12 @@
                         </button>
                     </x-slot>
                     <x-slot name="content">
-                        @if(auth()->user()->hasRole('admin'))
+                        @if(auth()->user()->hasRole('admin') || auth()->user()->hasRole('editor') || auth()->user()->hasRole('user'))
                             <x-dropdown-link :href="route('dashboard')">
                                 {{ __('Dashboard') }}
                             </x-dropdown-link>
                         @endif
-                        <x-dropdown-link :href="route('profile.edit')"> {{-- Arahkan ke profile edit BUKAN dashboard.profile.edit --}}
+                        <x-dropdown-link :href="route('profile.edit')">
                             {{ __('Profile') }}
                         </x-dropdown-link>
                         <!-- Authentication -->
@@ -95,13 +101,19 @@
             <x-responsive-nav-link :href="route('about')" :active="request()->routeIs('about')">
                 {{ __('About Us') }}
             </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('quran.index')" :active="request()->routeIs('quran.*')">
+                <i class="bx bx-book-open mr-2"></i> {{ __('Al-Qur\'an') }}
+            </x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('prayer-times.index')" :active="request()->routeIs('prayer-times.*')">
+                <i class="bx bx-time-five mr-2"></i> {{ __('Jadwal Sholat') }}
+            </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('podcast')" :active="request()->routeIs('podcast')">
                 {{ __('Podcast') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('contact')" :active="request()->routeIs('contact')">
                 {{ __('Contacts') }}
             </x-responsive-nav-link>
-            <x-responsive-nav-link href="#" >
+             <x-responsive-nav-link href="#" >
                  {{ __('Support') }} {{-- Tambah support di mobile --}}
             </x-responsive-nav-link>
         </div>
@@ -114,11 +126,9 @@
                     <div class="font-medium text-sm text-gray-500">{{ Auth::user()->email }}</div>
                 </div>
                 <div class="mt-3 space-y-1">
-                     @if(auth()->user()->hasRole('admin'))
                         <x-responsive-nav-link :href="route('dashboard')">
                             {{ __('Dashboard') }}
                         </x-responsive-nav-link>
-                    @endif
                     <x-responsive-nav-link :href="route('profile.edit')">
                         {{ __('Profile') }}
                     </x-responsive-nav-link>

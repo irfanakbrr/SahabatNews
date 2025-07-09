@@ -1,30 +1,25 @@
 @csrf
-
-<div class="mb-3">
-    <label for="name" class="form-label">Nama Kategori</label>
-    <input type="text" name="name" id="name" value="{{ old('name', $category->name ?? '') }}" required
-           class="form-control @error('name') is-invalid @enderror">
-    @error('name')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
+<div class="p-6 bg-white rounded-lg shadow-md">
+    <div class="space-y-4">
+        <div>
+            <label for="name" class="block text-sm font-medium text-gray-700">Nama Kategori</label>
+            <input type="text" name="name" id="name" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" value="{{ old('name', $category->name ?? '') }}" required>
+            @error('name')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label for="slug" class="block text-sm font-medium text-gray-700">Slug</label>
+            <input type="text" name="slug" id="slug" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" value="{{ old('slug', $category->slug ?? '') }}">
+            <p class="mt-1 text-xs text-gray-500">Kosongkan agar slug dibuat otomatis.</p>
+            @error('slug')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
+        <div>
+            <label for="color" class="block text-sm font-medium text-gray-700">Warna</label>
+            <input type="text" name="color" id="color" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500 sm:text-sm" value="{{ old('color', $category->color ?? '') }}">
+            <p class="mt-1 text-xs text-gray-500">Gunakan nama kelas Tailwind, contoh: `bg-red-500`.</p>
+            @error('color')<p class="mt-1 text-sm text-red-600">{{ $message }}</p>@enderror
+        </div>
+    </div>
 </div>
-
-<div class="mb-3">
-    <label for="color" class="form-label">Warna Kategori</label>
-    <input type="text" name="color" id="color" value="{{ old('color', $category->color ?? '') }}"
-           placeholder="cth: #FF0000 atau bg-danger atau text-primary"
-           class="form-control @error('color') is-invalid @enderror">
-    <small class="form-text text-muted">Bisa berupa kode hex (cth: #FF0000), atau kelas utilitas warna Bootstrap (cth: bg-primary, text-success).</small>
-    @error('color')
-        <div class="invalid-feedback">{{ $message }}</div>
-    @enderror
-</div>
-
-<div class="mt-4 pt-3 border-top">
-    <a href="{{ route('dashboard.categories.index') }}" class="btn btn-secondary me-2">
-        Batal
-    </a>
-    <button type="submit" class="btn btn-primary">
-        {{ ($category->id ?? null) ? 'Update Kategori' : 'Simpan Kategori' }}
-    </button>
-</div> 
+<button type="submit" class="mt-6 w-full px-4 py-3 text-sm font-medium text-white bg-purple-600 rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500">
+    Simpan Kategori
+</button> 

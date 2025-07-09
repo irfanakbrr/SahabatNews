@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Post;
+use App\Models\User;
+use App\Models\Category;
 use Illuminate\Support\Facades\DB; // Untuk DB::raw
 use Carbon\Carbon; // Untuk manipulasi tanggal
 
@@ -19,6 +21,7 @@ class AnalyticsController extends Controller
 
         $totalPublishedPosts = Post::where('status', 'published')->count();
         $totalViewsAllPosts = Post::sum('view_count');
+        $totalComments = \App\Models\Comment::where('approved', true)->count();
 
         // Data untuk Line Chart: Tren Publikasi Artikel per Bulan (6 bulan terakhir)
         $monthlyPublishedPosts = Post::select(
@@ -48,47 +51,50 @@ class AnalyticsController extends Controller
         }
 
         // Hitung pengunjung unik hari ini (berdasarkan IP address di tabel visitors)
-        $todayVisitors = 0;
-        if (\Schema::hasTable('visitors')) {
-            $todayVisitors = \DB::table('visitors')
-                ->whereDate('created_at', \Carbon\Carbon::today())
-                ->distinct('ip_address')
-                ->count('ip_address');
-        }
+        // Sekarang tabel 'visitors' sudah ada dan middleware berjalan.
+        $todayVisitors = DB::table('visitors')
+            ->whereDate('visited_at', Carbon::today())
+            ->distinct('ip_address')
+            ->count('ip_address');
+        
+        // Statistik Penulis & Kategori
+        $prolificAuthors = User::withCount(['posts' => fn($q) => $q->where('status', 'published')])
+            ->having('posts_count', '>', 0)
+            ->orderByDesc('posts_count')
+            ->take(5)
+            ->get();
 
-        // Anda juga bisa menambahkan data lain di sini jika perlu
-        // $totalViews = Post::sum('view_count');
+        $popularCategories = Category::withCount(['posts' => fn($q) => $q->where('status', 'published')])
+            ->having('posts_count', '>', 0)
+            ->orderByDesc('posts_count')
+            ->take(5)
+            ->get();
 
-        // Data untuk chart (jika ingin ada chart yang sama seperti di dashboard)
-        // $publishedPostsByCategory = \App\Models\Category::withCount([
-        //     'posts' => fn($query) => $query->where('status', 'published')
-        // ])->having('posts_count', '>', 0)->orderBy('posts_count', 'desc')->get();
+        // Data baru untuk Dashboard Editor
+        $articlesToday = Post::where('status', 'published')->whereDate('published_at', Carbon::today())->count();
+        $pendingComments = \App\Models\Comment::where('approved', false)->count();
+        $draftCount = Post::where('status', 'draft')->count();
 
-        // $chartLabels = $publishedPostsByCategory->pluck('name');
-        // $chartData = $publishedPostsByCategory->pluck('posts_count');
-        // $chartColors = $publishedPostsByCategory->map(function ($category) {
-        //     if (Str::startsWith($category->color, '#') || Str::startsWith($category->color, 'rgb')) {
-        //         return $category->color;
-        //     } elseif (Str::startsWith($category->color, 'bg-')) {
-        //         $colorMap = [
-        //             'bg-red-500' => '#EF4444', 'bg-blue-500' => '#3B82F6', 'bg-green-500' => '#22C55E',
-        //             'bg-yellow-500' => '#EAB308', 'bg-indigo-500' => '#6366F1', 'bg-purple-500' => '#8B5CF6',
-        //             'bg-pink-500' => '#EC4899', 'bg-gray-500' => '#6B7280', 'bg-sky-500' => '#0EA5E9',
-        //             'bg-emerald-500' => '#10B981', 'bg-rose-500' => '#F43F5E', 'bg-orange-500' => '#F97316',
-        //         ];
-        //         return $colorMap[$category->color] ?? '#' . substr(md5(rand()), 0, 6);
-        //     }
-        //     return '#' . substr(md5($category->name), 0, 6);
-        // });
+        $popularPostsLast7Days = Post::where('status', 'published')
+            ->where('published_at', '>=', Carbon::now()->subDays(7))
+            ->orderByDesc('view_count')
+            ->take(5)
+            ->get();
 
-        return view('analytics', compact(
+        return view('admin.dashboard', compact(
             'popularPosts', 
             'totalPublishedPosts', 
             'totalViewsAllPosts',
+            'totalComments',
             'trendLabels',
             'trendData',
-            'todayVisitors'
-            // 'chartLabels', 'chartData', 'chartColors' // Uncomment jika ingin chart di analytics juga
+            'todayVisitors',
+            'prolificAuthors',
+            'popularCategories',
+            'articlesToday',
+            'pendingComments',
+            'draftCount',
+            'popularPostsLast7Days'
         ));
     }
 }

@@ -23,14 +23,17 @@ class CategorySeeder extends Seeder
             ['name' => 'Science', 'color' => 'bg-indigo-500'],
             ['name' => 'IT', 'color' => 'bg-purple-500'],
             ['name' => 'Nature', 'color' => 'bg-teal-500'],
+            ['name' => 'Islam', 'color' => 'bg-green-600'],
         ];
 
         foreach ($categories as $category) {
-            Category::create([
-                'name' => $category['name'],
+            Category::updateOrCreate(
+                ['name' => $category['name']],
+                [
                 'color' => $category['color'],
                 'slug' => Str::slug($category['name'])
-            ]);
+                ]
+            );
         }
     }
 } 

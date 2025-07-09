@@ -1,0 +1,72 @@
+@import 'tailwindcss/base';
+@import 'tailwindcss/components';
+@import 'tailwindcss/utilities';
+
+/* Custom styles for the new admin dashboard */
+body {
+    /* Subtle gradient background for the glass effect to pop */
+    background-image: linear-gradient(120deg, #f0f2f5 0%, #e6e9ed 100%);
+    font-family: 'Inter', sans-serif;
+}
+.admin-sidebar {
+    background-color: #54229e; /* New primary purple color */
+}
+.sidebar-link {
+    transition: all 0.2s ease-in-out;
+    color: #ffffff; /* Default text color */
+}
+.sidebar-link .bx {
+    color: #ffffff;
+}
+.sidebar-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+.sidebar-link.active {
+    background-color: #ffffff;
+    color: #54229e !important; /* Active link text is primary purple */
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
+    position: relative;
+}
+.sidebar-link.active .bx {
+    color: #54229e; /* Active icon is primary purple */
+}
+
+/* The "scooped" effect using pseudo-elements */
+.sidebar-link.active::before,
+.sidebar-link.active::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    width: 20px;
+    height: 20px;
+    background-color: transparent;
+}
+.sidebar-link.active::before {
+    top: -20px;
+    border-bottom-right-radius: 10px;
+    box-shadow: 5px 5px 0 5px #ffffff;
+}
+.sidebar-link.active::after {
+    bottom: -20px;
+    border-top-right-radius: 10px;
+    box-shadow: 5px -5px 0 5px #ffffff;
+}
+.main-content {
+    background-color: #f7f9fc;
+}
+
+.glass-card {
+    background: rgba(255, 255, 255, 0.45);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    box-shadow: 0 8px 32px 0 rgba(108, 38, 222, 0.1); /* Softer purple shadow */
+    transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px 0 rgba(108, 38, 222, 0.15);
+} 

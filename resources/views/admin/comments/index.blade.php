@@ -1,105 +1,77 @@
-@extends('layouts.admin')
+@extends('layouts.admin-new')
 
-@section('header')
-    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            {{ __('Moderasi Komentar') }}
-        </h2>
+@section('title', 'Manajemen Komentar')
+
+@section('header-content')
+    <h1 class="text-2xl font-semibold text-gray-800">Manajemen Komentar</h1>
 @endsection
 
 @section('content')
-    <div class="py-8">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            {{-- Notifikasi --}}
-            @if (session('success'))
-                <div class="mb-6 bg-green-50 dark:bg-green-700 border border-green-300 dark:border-green-600 text-green-700 dark:text-green-100 px-4 py-3 rounded-md relative" role="alert">
-                    <span class="block sm:inline">{{ session('success') }}</span>
-                </div>
-            @endif
-             @if (session('error'))
-                <div class="mb-6 bg-red-50 dark:bg-red-700 border border-red-300 dark:border-red-600 text-red-700 dark:text-red-100 px-4 py-3 rounded-md relative" role="alert">
-                    <span class="block sm:inline">{{ session('error') }}</span>
-                </div>
-            @endif
-
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0">Daftar Komentar Menunggu Moderasi</h5>
-                </div>
-                <div class="card-body">
-                    <div class="table-responsive text-nowrap">
-                        <table class="table table-hover">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Komentar</th>
-                                    <th>Author</th>
-                                    <th>Artikel</th>
-                                    <th>Tanggal</th>
-                                    <th>Status</th>
-                                    <th class="text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody class="table-border-bottom-0">
-                                @forelse ($comments as $comment)
-                                    <tr class="{{ !$comment->approved ? 'table-warning' : '' }}">
-                                        <td style="white-space: normal; min-width: 250px;">
-                                            {{ $comment->content }}
-                                        </td>
-                                        <td>{{ $comment->user->name ?? 'User Dihapus' }}</td>
-                                        <td>
-                                            @if($comment->post)
-                                                <a href="{{ route('posts.show', $comment->post->slug) }}" target="_blank" title="{{ $comment->post->title }}">
-                                                    {{ Str::limit($comment->post->title, 30) }}
-                                                </a>
-                                            @else
-                                                Artikel Dihapus
-                                            @endif
-                                        </td>
-                                        <td>{{ $comment->created_at->format('d M Y, H:i') }}</td>
-                                        <td>
-                                             @if ($comment->approved)
-                                                <span class="badge bg-success">Disetujui</span>
-                                            @else
-                                                <span class="badge bg-warning">Pending</span>
-                                            @endif
-                                        </td>
-                                        <td class="text-center">
-                                            <div class="d-inline-flex">
-                                            @unless($comment->approved)
-                                                    <form action="{{ route('dashboard.comments.approve', $comment) }}" method="POST" class="d-inline me-1">
-                                                        @csrf
-                                                        @method('PATCH')
-                                                        <button type="submit" class="btn btn-sm btn-success" title="Setujui">
-                                                            <i class="bx bx-check"></i>
-                                                        </button>
-                                                    </form>
-                                                @endunless
-                                                <form action="{{ route('dashboard.comments.destroy', $comment) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus komentar ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                                                        <i class="bx bx-trash"></i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                                        <td colspan="6" class="text-center py-4">
-                                            Belum ada komentar untuk dimoderasi.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                @if ($comments->hasPages())
-                    <div class="card-footer">
-                        {{ $comments->links('pagination::bootstrap-5') }}
-                    </div>
-                @endif
-            </div>
-        </div>
+<div class="p-6 bg-white rounded-lg shadow-md">
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Komentar</th>
+                    <th scope="col" class="px-6 py-3">Penulis</th>
+                    <th scope="col" class="px-6 py-3">Pada Artikel</th>
+                    <th scope="col" class="px-6 py-3">Status</th>
+                    <th scope="col" class="px-6 py-3 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($comments as $comment)
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <td class="px-6 py-4">{{ Str::limit($comment->content, 50) }}</td>
+                    <td class="px-6 py-4">{{ $comment->user->name }}</td>
+                    <td class="px-6 py-4">
+                        <a href="{{ route('posts.show', $comment->post->slug) }}" target="_blank" class="hover:underline">
+                            {{ Str::limit($comment->post->title, 30) }}
+                        </a>
+                    </td>
+                    <td class="px-6 py-4">
+                        @if($comment->approved)
+                            <span class="px-2 py-1 text-xs font-semibold text-green-800 bg-green-100 rounded-full">Disetujui</span>
+                        @else
+                            <span class="px-2 py-1 text-xs font-semibold text-yellow-800 bg-yellow-100 rounded-full">Pending</span>
+                        @endif
+                    </td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end space-x-2">
+                            @unless($comment->approved)
+                            <form action="{{ route('dashboard.comments.approve', $comment->id) }}" method="POST">
+                                @csrf
+                                @method('PATCH')
+                                <button type="submit" class="p-2 text-green-500 bg-green-100 rounded-full hover:bg-green-200" title="Setujui">
+                                    <i class='bx bx-check-circle'></i>
+                                </button>
+                            </form>
+                            @endunless
+                            <form action="{{ route('dashboard.comments.destroy', $comment->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus komentar ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-2 text-red-500 bg-red-100 rounded-full hover:bg-red-200" title="Hapus">
+                                    <i class='bx bxs-trash'></i>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                        Belum ada komentar.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
+
+    @if ($comments->hasPages())
+        <div class="mt-4">
+            {{ $comments->links() }}
+        </div>
+    @endif
+</div>
 @endsection 

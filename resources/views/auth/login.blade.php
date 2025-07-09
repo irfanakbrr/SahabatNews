@@ -1,48 +1,106 @@
 @extends('layouts.guest')
+
 @section('content')
-<div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-400 via-pink-300 to-blue-400">
-    <div class="relative w-full max-w-md flex flex-col items-center">
-        <!-- Icon User Floating -->
-        <div class="absolute left-1/2 -top-12 transform -translate-x-1/2 z-10 flex justify-center w-full">
-            <div class="bg-blue-700 w-16 h-16 rounded-full flex items-center justify-center shadow-lg border-4 border-white">
-                <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5.121 17.804A9 9 0 1112 21a8.963 8.963 0 01-6.879-3.196z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+<div id="shadow" class="fixed top-0 left-0 z-1 h-32 w-32 rounded-full bg-white blur-[70px] transition-opacity duration-300 opacity-0"></div>
+<div class="radius-xl relative z-1 flex h-screen w-full flex-col overflow-auto p-5 sm:p-10" style="background-image: url('https://assets.codepen.io/344846/photo-1697899001862-59699946ea29.jpeg'); background-size: cover; background-repeat: no-repeat; background-position: center;">
+  <div id="card" class="relative mx-auto my-auto w-full max-w-110 shrink-0 overflow-hidden rounded-4xl border-t border-white/20 bg-gradient-to-t from-zinc-100/10 to-zinc-950/50 to-50% p-8 text-white shadow-2xl shadow-black outline -outline-offset-1 outline-white/5 backdrop-blur-2xl">
+    <div class="mb-8 inline-flex h-12 items-center rounded-full border-b border-b-white/12 bg-zinc-950/75 p-1 text-sm font-medium w-full">
+      <a href="{{ route('register') }}" class="px-6 text-zinc-500 hover:text-white transition-colors flex-1 text-center">Sign up</a>
+      <div class="inline-flex h-full items-center rounded-full border-t border-t-white/10 bg-zinc-800 px-6 outline -outline-offset-1 outline-white/4 flex-1 text-center">Sign in</div>
+    </div>
+    
+    <h2 class="mb-7 text-[1.4rem] font-medium">Sign in to your account</h2>
+    
+    <!-- Session Status -->
+    <x-auth-session-status class="mb-4" :status="session('status')" />
+    
+    <form method="POST" action="{{ route('login') }}">
+        @csrf
+        
+        <div class="flex grid-cols-2 flex-col gap-4 text-sm sm:grid">
+            <!-- Email -->
+            <div class="relative col-span-2 h-11 overflow-hidden">
+                <input 
+                    type="email" 
+                    id="email"
+                    name="email"
+                    value="{{ old('email') }}"
+                    required
+                    autofocus
+                    autocomplete="username"
+                    class="peer relative z-1 h-full w-full rounded-md border border-white/8 bg-white/2 pr-4 pl-11 duration-300 placeholder:text-white/20 focus:outline-0 text-white" 
+                    placeholder="Enter your email" 
+                />
+                <svg class="pointer-events-none absolute top-3 left-3.5 z-2 mt-px h-4.5 w-4.5 text-white/20 duration-300 peer-focus-visible:text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <g fill="none">
+                        <path d="M24 0v24H0V0zM12.593 23.258l-.011.002-.071.035-.02.004-.014-.004-.071-.035c-.01-.004-.019-.001-.024.005l-.004.01-.017.428.005.02.01.013.104.074.015.004.012-.004.104-.074.012-.016.004-.017-.017-.427c-.002-.01-.009-.017-.017-.018m.265-.113-.013.002-.185.093-.01.01-.003.011.018.43.005.012.008.007.201.093c.012.004.023 0 .029-.008l.004-.014-.034-.614c-.003-.012-.01-.02-.02-.022m-.715.002a.023.023 0 0 0-.027.006l-.006.014-.034.614c0 .012.007.02.017.024l.015-.002.201-.093.01-.008.004-.011.017-.43-.003-.012-.01-.01z"></path>
+                        <path fill="currentColor" d="M20 4a2 2 0 0 1 1.995 1.85L22 6v12a2 2 0 0 1-1.85 1.995L20 20H4a2 2 0 0 1-1.995-1.85L2 18v-1h2v1h16V7.414l-6.94 6.94a1.5 1.5 0 0 1-2.007.103l-.114-.103L4 7.414V8H2V6a2 2 0 0 1 1.85-1.995L4 4zM6 13a1 1 0 1 1 0 2H1a1 1 0 1 1 0-2zm12.586-7H5.414L12 12.586zM5 10a1 1 0 0 1 .117 1.993L5 12H2a1 1 0 0 1-.117-1.993L2 10z"></path>
+                    </g>
+                </svg>
+                <span class="absolute bottom-0 left-0 z-2 h-px w-full bg-gradient-to-r from-transparent from-5% via-white to-transparent to-95% opacity-0 transition-opacity duration-300 peer-focus-visible:opacity-40"></span>
+                <span class="absolute inset-x-4 bottom-0 z-1 h-4 origin-bottom scale-y-0 -skew-x-12 bg-gradient-to-b from-white to-transparent opacity-0 blur-md duration-300 peer-focus-visible:scale-100 peer-focus-visible:opacity-30"></span>
+                <x-input-error :messages="$errors->get('email')" class="mt-2 text-red-300" />
+            </div>
+
+            <!-- Password -->
+            <div class="relative col-span-2 h-11 overflow-hidden">
+                <input 
+                    type="password" 
+                    id="password"
+                    name="password"
+                    required
+                    autocomplete="current-password"
+                    class="peer relative z-1 h-full w-full rounded-md border border-white/8 bg-white/2 pr-4 pl-11 duration-300 placeholder:text-white/20 focus:outline-0 text-white" 
+                    placeholder="Enter your password" 
+                />
+                <svg class="pointer-events-none absolute top-3 left-3.5 z-2 mt-px h-4.5 w-4.5 text-white/20 duration-300 peer-focus-visible:text-white" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+                    <path fill="currentColor" d="M12 2C9.243 2 7 4.243 7 7v3H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2h-1V7c0-2.757-2.243-5-5-5zM9 7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9V7zm4 10.723V20h-2v-2.277a2 2 0 1 1 2 0z"/>
+                </svg>
+                <span class="absolute bottom-0 left-0 z-2 h-px w-full bg-gradient-to-r from-transparent from-5% via-white to-transparent to-95% opacity-0 transition-opacity duration-300 peer-focus-visible:opacity-40"></span>
+                <span class="absolute inset-x-4 bottom-0 z-1 h-4 origin-bottom scale-y-0 -skew-x-12 bg-gradient-to-b from-white to-transparent opacity-0 blur-md duration-300 peer-focus-visible:scale-100 peer-focus-visible:opacity-30"></span>
+                <x-input-error :messages="$errors->get('password')" class="mt-2 text-red-300" />
             </div>
         </div>
-        <!-- Card -->
-        <div class="pt-14 pb-8 px-6 bg-white/30 backdrop-blur-md rounded-2xl shadow-2xl flex flex-col gap-6 w-full mt-8">
-            <h2 class="text-center text-2xl font-bold text-gray-900 mb-2">Masuk ke SahabatNews</h2>
-            <form method="POST" action="{{ route('login') }}" class="space-y-4">
-                @csrf
-                <!-- Email -->
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-900">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 12H8m8 0a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
-                    </span>
-                    <input id="email" name="email" type="email" required autofocus placeholder="Email ID" value="{{ old('email') }}" class="pl-10 pr-3 py-2 w-full rounded bg-blue-900/70 text-white placeholder-white focus:ring-2 focus:ring-blue-400 border-none outline-none" />
-                    <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                </div>
-                <!-- Password -->
-                <div class="relative">
-                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-blue-900">
-                        <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m0-6a2 2 0 100 4 2 2 0 000-4zm6 2a6 6 0 11-12 0 6 6 0 0112 0z" /></svg>
-                    </span>
-                    <input id="password" name="password" type="password" required placeholder="Password" class="pl-10 pr-3 py-2 w-full rounded bg-blue-900/70 text-white placeholder-white focus:ring-2 focus:ring-blue-400 border-none outline-none" />
-                    <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                </div>
-                <!-- Remember & Forgot -->
-                <div class="flex items-center justify-between text-xs text-blue-900">
-                    <label class="flex items-center gap-2">
-                        <input id="remember_me" type="checkbox" name="remember" class="accent-blue-700 rounded">
-                        <span>Remember me</span>
-                    </label>
-                    @if (Route::has('password.request'))
-                        <a href="{{ route('password.request') }}" class="hover:underline">Forgot Password?</a>
-                    @endif
-                </div>
-                <!-- Button -->
-                <button type="submit" class="w-full py-2 rounded-lg bg-blue-700 text-white font-bold shadow hover:bg-blue-800 transition">LOGIN</button>
-            </form>
+
+        <!-- Remember Me -->
+        <div class="flex items-center justify-between mt-4">
+            <label for="remember_me" class="inline-flex items-center">
+                <input id="remember_me" type="checkbox" class="rounded border-zinc-300 text-zinc-600 shadow-sm focus:ring-zinc-500" name="remember">
+                <span class="ms-2 text-sm text-white/60">{{ __('Remember me') }}</span>
+            </label>
+
+            @if (Route::has('password.request'))
+                <a class="text-sm text-white/60 hover:text-white transition-colors" href="{{ route('password.request') }}">
+                    {{ __('Forgot password?') }}
+                </a>
+            @endif
         </div>
-    </div>
+
+        <button type="submit" class="mt-7 h-12 w-full cursor-pointer rounded-md bg-white px-2 text-sm font-medium text-zinc-800 shadow-xl hover:bg-gray-100 transition-colors">Sign in</button>
+    </form>
+    
+    <div class="absolute inset-x-32 -bottom-20 left-32 h-10 bg-white blur-2xl"></div>
+  </div>
 </div>
+
+<script>
+const shadow = document.getElementById("shadow");
+const card = document.getElementById("card");
+
+document.body.addEventListener("mousemove", (e) => {
+  const { clientX, clientY } = e;
+  if (e.target.closest("#card")) {
+    shadow.style.setProperty(
+      "transform",
+      `translateX(${clientX - 60}px) translateY(${clientY - 60}px)`
+    );
+    shadow.style.setProperty(
+      "opacity",
+      "0.5"
+    );
+  } else {
+    shadow.style.setProperty("opacity", "0");
+  }
+});
+</script>
 @endsection

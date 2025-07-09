@@ -6,6 +6,7 @@ use App\Models\Post;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Events\CommentPosted;
 
 class CommentController extends Controller
 {
@@ -22,15 +23,20 @@ class CommentController extends Controller
             'content' => 'required|string|max:1000',
         ]);
 
-        // Buat komentar baru
-        $comment = new Comment();
-        $comment->content = $request->content;
-        $comment->user_id = Auth::id(); // Pastikan user sudah login (ditangani middleware auth)
-        $comment->post_id = $post->id;
-        // Secara default, kolom 'approved' di model Comment akan false.
-        // Admin akan menyetujui melalui panel admin.
-        $comment->save();
+        $comment = $post->comments()->create([
+            'content' => $request->content,
+            'user_id' => Auth::id(),
+            'approved' => true, // Asumsikan langsung disetujui untuk demo real-time
+        ]);
 
-        return back()->with('success', 'Komentar Anda berhasil dikirim dan akan dimoderasi.');
+        // Siarkan event ke semua listener
+        broadcast(new CommentPosted($comment))->toOthers();
+
+        // Notifikasi ke penulis post (jika berbeda) masih bisa dilakukan jika perlu,
+        // dengan membuat Listener untuk event CommentPosted.
+        // Untuk sekarang kita fokus pada real-time comment.
+
+        // Kita tidak lagi mengembalikan back(), karena frontend akan menanganinya
+        return response()->json(['status' => 'success', 'comment' => $comment->load('user')]);
     }
 } 

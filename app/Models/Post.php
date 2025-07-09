@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Str; // Untuk slug otomatis
+use Laravel\Scout\Searchable; // Impor trait Searchable
 
 class Post extends Model
 {
-    use HasFactory;
+    use HasFactory, Searchable; // Gunakan trait
 
     protected $fillable = [
         'title',
@@ -21,6 +22,7 @@ class Post extends Model
         'status',
         'published_at',
         'slug',
+        'view_count',
     ];
 
     protected $casts = [
@@ -75,5 +77,23 @@ class Post extends Model
     public function getRouteKeyName()
     {
         return 'slug';
+    }
+
+    /**
+     * Get the indexable data array for the model.
+     *
+     * @return array
+     */
+    public function toSearchableArray(): array
+    {
+        return [
+            'title' => $this->title,
+            'content' => strip_tags($this->content), // Hapus tag HTML dari konten
+        ];
+    }
+
+    public function revisions(): HasMany
+    {
+        return $this->hasMany(PostRevision::class)->latest();
     }
 } 

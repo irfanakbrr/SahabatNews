@@ -73,6 +73,31 @@
                             </a>
                         </li>
 
+                        @if(Auth::user()->hasRole('user'))
+                        <li class="menu-header small text-uppercase">
+                            <span class="menu-header-text">Artikel Saya</span>
+                        </li>
+                        <li class="menu-item {{ request()->routeIs('dashboard.userposts.*') ? 'active open' : '' }}">
+                            <a href="javascript:void(0);" class="menu-link menu-toggle">
+                                <i class="menu-icon tf-icons bx bx-edit"></i>
+                                <div data-i18n="Layouts">Kelola Artikel</div>
+                            </a>
+                            <ul class="menu-sub">
+                                <li class="menu-item {{ request()->routeIs('dashboard.userposts.index') ? 'active' : '' }}">
+                                    <a href="{{ route('dashboard.userposts.index') }}" class="menu-link">
+                                        <div data-i18n="Tanpa menu">Daftar Artikel</div>
+                                    </a>
+                                </li>
+                                <li class="menu-item {{ request()->routeIs('dashboard.userposts.create') ? 'active' : '' }}">
+                                    <a href="{{ route('dashboard.userposts.create') }}" class="menu-link">
+                                        <div data-i18n="Tanpa navbar">Tulis Baru</div>
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
+                        @endif
+
+                        @if(Auth::user()->hasRole('admin') || Auth::user()->hasRole('editor'))
                         <li class="menu-header small text-uppercase">
                             <span class="menu-header-text">Manajemen Konten</span>
                         </li>
@@ -84,12 +109,23 @@
                             <ul class="menu-sub">
                                 <li class="menu-item {{ request()->routeIs('dashboard.posts.index') ? 'active' : '' }}">
                                     <a href="{{ route('dashboard.posts.index') }}" class="menu-link">
-                                        <div data-i18n="Without menu">Semua Artikel</div>
+                                        <div data-i18n="Tanpa menu">Semua Artikel</div>
                                     </a>
                                 </li>
                                 <li class="menu-item {{ request()->routeIs('dashboard.posts.create') ? 'active' : '' }}">
                                     <a href="{{ route('dashboard.posts.create') }}" class="menu-link">
-                                        <div data-i18n="Without navbar">Tambah Baru</div>
+                                        <div data-i18n="Tanpa navbar">Tambah Baru</div>
+                                    </a>
+                                </li>
+                                <li class="menu-item {{ request()->routeIs('dashboard.posts.pending') ? 'active' : '' }}">
+                                    <a href="{{ route('dashboard.posts.pending') }}" class="menu-link">
+                                        <div data-i18n="Pending">Menunggu Persetujuan</div>
+                                        @php
+                                            $pendingCount = \App\Models\Post::where('status', 'draft')->count();
+                                        @endphp
+                                        @if($pendingCount > 0)
+                                            <span class="badge bg-danger rounded-pill ms-auto">{{ $pendingCount }}</span>
+                                        @endif
                                     </a>
                                 </li>
                             </ul>
@@ -106,7 +142,9 @@
                                 <div data-i18n="Basic">Komentar</div>
                             </a>
                         </li>
+                        @endif
 
+                        @if(Auth::user()->hasRole('admin'))
                         <li class="menu-header small text-uppercase"><span class="menu-header-text">Manajemen Pengguna</span></li>
                          <li class="menu-item {{ request()->routeIs('dashboard.users.*') ? 'active' : '' }}">
                             <a href="{{ route('dashboard.users.index') }}" class="menu-link">
@@ -120,7 +158,6 @@
                                 <div data-i18n="Pages">Halaman Statis</div>
                             </a>
                         </li>
-
                         <li class="menu-header small text-uppercase"><span class="menu-header-text">Lainnya</span></li>
                         <li class="menu-item {{ request()->routeIs('analytics') ? 'active' : '' }}">
                             <a href="{{ route('analytics') }}" class="menu-link">
@@ -128,6 +165,7 @@
                                 <div data-i18n="User interface">Analytics</div>
                             </a>
                         </li>
+                        @endif
                     </ul>
                 </aside>
                 <!-- / Menu -->
@@ -171,11 +209,6 @@
                             <!-- /Search -->
 
                             <ul class="navbar-nav flex-row align-items-center ms-auto">
-                                <!-- User Name (Moved into dropdown for Sneat style) -->
-                                <!-- <li class="nav-item lh-1 me-3 d-none d-xl-block">
-                                    <span class="text-body">{{ Auth::user()->name }}</span>
-                                </li> -->
-
                                 <!-- User Dropdown -->
                                 <li class="nav-item navbar-dropdown dropdown-user dropdown">
                                     <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
@@ -185,22 +218,10 @@
                                     </a>
                                     <ul class="dropdown-menu dropdown-menu-end">
                                         <li>
-                                            <a class="dropdown-item" href="{{ route('profile.edit') }}">
-                                                <div class="d-flex">
-                                                    <div class="flex-shrink-0 me-3">
-                                                        <div class="avatar avatar-online">
-                                                            <img src="{{ Auth::user()->avatar ? asset('storage/'.Auth::user()->avatar) : 'https://via.placeholder.com/40/696cff/fff?text='.strtoupper(substr(Auth::user()->name, 0, 1)) }}" alt class="w-px-40 h-auto rounded-circle" loading="lazy" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="flex-grow-1">
-                                                        <span class="fw-semibold d-block">{{ Auth::user()->name }}</span>
-                                                        <small class="text-muted">{{ Auth::user()->role ? ucfirst(Auth::user()->role->name) : 'User' }}</small>
-                                                    </div>
-                                                </div>
+                                            <a class="dropdown-item" href="{{ route('dashboard') }}">
+                                                <i class="bx bx-home me-2"></i>
+                                                <span class="align-middle">Dashboard</span>
                                             </a>
-                                        </li>
-                                        <li>
-                                            <div class="dropdown-divider"></div>
                                         </li>
                                         <li>
                                             <a class="dropdown-item" href="{{ route('profile.edit') }}">
@@ -208,13 +229,6 @@
                                                 <span class="align-middle">Profil Saya</span>
                                             </a>
                                         </li>
-                                        {{-- Jika ada halaman settings terpisah --}}
-                                        {{-- <li>
-                                            <a class="dropdown-item" href="#">
-                                                <i class="bx bx-cog me-2"></i>
-                                                <span class="align-middle">Settings</span>
-                                            </a>
-                                        </li> --}}
                                         <li>
                                             <div class="dropdown-divider"></div>
                                         </li>
@@ -231,6 +245,18 @@
                                 </li>
                                 <!--/ User -->
                             </ul>
+
+                            <div class="navbar-nav align-items-center ms-3 gap-2">
+                                <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-sm d-flex align-items-center">
+                                    <i class="bx bx-user me-1"></i> Profil
+                                </a>
+                                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="btn btn-outline-danger btn-sm d-flex align-items-center">
+                                        <i class="bx bx-log-out me-1"></i> Logout
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </nav>
                     <!-- / Navbar -->
@@ -260,6 +286,10 @@
                                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                                 </div>
                             @endif
+
+                            @php
+                                $pendingCount = \App\Models\Post::where('status', 'draft')->count();
+                            @endphp
 
                             @yield('content')
                         </div>

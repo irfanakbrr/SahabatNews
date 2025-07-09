@@ -1,92 +1,184 @@
 @extends('layouts.admin')
 
 @section('header')
-    Dashboard
+    <h4 class="fw-bold mb-0">Dashboard</h4>
 @endsection
 
 @section('content')
-<div class="row mb-3">
-    <!-- Congratulations Card -->
-    <div class="col-lg-8">
-        <div class="card">
-            <div class="d-flex align-items-end row">
-                <div class="col-sm-7">
-                    <div class="card-body">
-                        <h5 class="card-title text-primary">Selamat Datang {{ Auth::user()->name }}! 🎉</h5>
-                        <p class="mb-4">
-                            Anda telah berhasil login di Panel Admin SahabatNews. Kelola konten dan pengguna dengan mudah.
-                        </p>
-                        <a href="{{ route('dashboard.posts.create') }}" class="btn btn-sm btn-outline-primary">Buat Artikel Baru</a>
+<div class="container-fluid px-0">
+    @if(Auth::user()->hasRole('user'))
+        <div class="row mb-4">
+            <div class="col-12 d-flex justify-content-end gap-2">
+                <a href="{{ route('profile.edit') }}" class="btn btn-outline-primary btn-sm"><i class="bx bx-user"></i> Profil</a>
+                <form action="{{ route('logout') }}" method="POST" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm"><i class="bx bx-log-out"></i> Logout</button>
+                </form>
+                <a href="{{ route('dashboard.userposts.index') }}" class="btn btn-outline-info btn-sm"><i class="bx bx-list-ul"></i> Artikel Saya</a>
+                <a href="{{ route('dashboard.userposts.create') }}" class="btn btn-success btn-sm"><i class="bx bx-upload"></i> Tulis Artikel</a>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Berita Diajukan</h6>
+                        <h2 class="fw-bold mb-0">{{ Auth::user()->posts()->count() }}</h2>
                     </div>
                 </div>
-                <div class="col-sm-5 d-flex align-items-center justify-content-center" style="min-height: 180px;">
-                    <div class="card-body px-0 px-md-4 d-flex justify-content-center align-items-center h-100 m-0">
-                        <img 
-                            src="{{ Auth::user()->avatar ? asset('storage/' . Auth::user()->avatar) : 'https://ui-avatars.com/api/?name=' . urlencode(Auth::user()->name) . '&background=0D8ABC&color=fff' }}" 
-                            height="100" 
-                            alt="Avatar User" 
-                            class="rounded-circle shadow"
-                            style="object-fit:cover; width:100px; height:100px;"
-                        >
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Berita Disetujui</h6>
+                        <h2 class="fw-bold mb-0">{{ Auth::user()->posts()->where('status','published')->count() }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Berita Menunggu</h6>
+                        <h2 class="fw-bold mb-0">{{ Auth::user()->posts()->where('status','draft')->count() }}</h2>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-    <!-- Statistics Cards -->
-    <div class="col-lg-4">
+        
+        @if(Auth::user()->posts()->where('status','rejected')->count() > 0)
+        <div class="row g-4 mb-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card shadow-sm border-0 border-start border-danger border-3">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Berita Ditolak</h6>
+                        <h2 class="fw-bold mb-0 text-danger">{{ Auth::user()->posts()->where('status','rejected')->count() }}</h2>
+                        <small class="text-muted">Perlu diperbaiki dan diajukan ulang</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+        
+        <!-- Artikel Terbaru User -->
         <div class="row">
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between">
-                            <div class="avatar flex-shrink-0">
-                                <span class="badge bg-label-primary p-2"><i class="bx bx-file fs-4"></i></span>
-                            </div>
-                        </div>
-                        <span class="fw-semibold d-block mb-1">Total Artikel</span>
-                        <h3 class="card-title mb-2">{{ $postCount }}</h3>
+            <div class="col-12">
+                <div class="card shadow-sm">
+                    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Artikel Terbaru Saya</h6>
+                        <a href="{{ route('dashboard.userposts.index') }}" class="btn btn-sm btn-outline-primary">Lihat Semua</a>
                     </div>
-                </div>
-            </div>
-            <div class="col-12 mb-4">
-                <div class="card">
                     <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between">
-                            <div class="avatar flex-shrink-0">
-                                <span class="badge bg-label-info p-2"><i class="bx bx-collection fs-4"></i></span>
+                        @php $recentPosts = Auth::user()->posts()->with('category')->latest()->take(5)->get(); @endphp
+                        @if($recentPosts->count() > 0)
+                            <div class="list-group list-group-flush">
+                                @foreach($recentPosts as $post)
+                                    <div class="list-group-item d-flex justify-content-between align-items-center">
+                                        <div>
+                                            <h6 class="mb-1">{{ Str::limit($post->title, 50) }}</h6>
+                                            <small class="text-muted">{{ $post->created_at->format('d M Y') }} • {{ $post->category->name }}</small>
+                                        </div>
+                                        <div>
+                                            @if($post->status == 'published')
+                                                <span class="badge bg-success">Dipublikasi</span>
+                                            @elseif($post->status == 'draft')
+                                                <span class="badge bg-warning">Menunggu</span>
+                                            @elseif($post->status == 'rejected')
+                                                <span class="badge bg-danger">Ditolak</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
                             </div>
-                        </div>
-                        <span class="fw-semibold d-block mb-1">Total Kategori</span>
-                        <h3 class="card-title mb-2">{{ $categoryCount }}</h3>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 mb-4">
-                <div class="card">
-                    <div class="card-body">
-                        <div class="card-title d-flex align-items-start justify-content-between">
-                            <div class="avatar flex-shrink-0">
-                                 <span class="badge bg-label-success p-2"><i class="bx bx-user fs-4"></i></span>
+                        @else
+                            <div class="text-center py-4">
+                                <i class="bx bx-file-blank fs-1 text-muted"></i>
+                                <p class="text-muted mt-2">Belum ada artikel</p>
+                                <a href="{{ route('dashboard.userposts.create') }}" class="btn btn-primary btn-sm">Tulis Artikel Pertama</a>
                             </div>
-                        </div>
-                        <span class="fw-semibold d-block mb-1">Total User</span>
-                        <h3 class="card-title mb-2">{{ $userCount }}</h3>
+                        @endif
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</div>
-
-<div class="row">
-    <!-- Artikel Terpublish per Kategori -->
-    <div class="col-md-12 col-lg-6 mb-4">
-        <div class="card h-100">
-            <div class="card-header d-flex align-items-center justify-content-between">
-                <h5 class="card-title m-0 me-2">Artikel Terpublish per Kategori</h5>
+        <div class="row">
+            <div class="col-12">
+                <div class="card shadow-sm border-0">
+                    <div class="card-header bg-white border-bottom-0"><h5 class="mb-0">Daftar Berita yang Diajukan</h5></div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Judul</th>
+                                        <th>Kategori</th>
+                                        <th>Status</th>
+                                        <th>Diajukan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse(Auth::user()->posts()->latest()->get() as $post)
+                                        <tr>
+                                            <td>{{ $post->title }}</td>
+                                            <td>{{ $post->category->name ?? '-' }}</td>
+                                            <td>
+                                                @if($post->status == 'published')
+                                                    <span class="badge bg-success">Disetujui</span>
+                                                @else
+                                                    <span class="badge bg-warning text-dark">Menunggu</span>
+                                                @endif
+                                            </td>
+                                            <td>{{ $post->created_at->diffForHumans() }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-center text-muted">Belum ada berita diajukan.</td></tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body" style="position: relative; height: 350px;">
+        </div>
+    @else
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Artikel</h6>
+                        <h2 class="fw-bold mb-0">{{ $postCount }}</h2>
+                    </div>
+                            </div>
+                        </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total Kategori</h6>
+                        <h2 class="fw-bold mb-0">{{ $categoryCount }}</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Total User</h6>
+                        <h2 class="fw-bold mb-0">{{ $userCount }}</h2>
+                    </div>
+                            </div>
+                        </div>
+            <div class="col-md-3">
+                <div class="card shadow-sm border-0">
+                    <div class="card-body text-center">
+                        <h6 class="text-muted">Artikel Draft</h6>
+                        <h2 class="fw-bold mb-0">{{ $draftPostsCount ?? 0 }}</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom-0"><h5 class="mb-0">Artikel Terpublish per Kategori</h5></div>
+                    <div class="card-body">
                 @if(!empty($chartLabels) && $chartLabels->count() > 0 && !empty($chartData) && $chartData->count() > 0 && !empty($chartColors) && $chartColors->count() > 0)
                     <canvas id="publishedPostsChart"></canvas>
                 @else
@@ -95,36 +187,48 @@
             </div>
         </div>
     </div>
-    <!--/ Artikel Terpublish per Kategori -->
-
-    <!-- Statistik Tambahan (Total Views & Draft) -->
-    <div class="col-md-12 col-lg-6 mb-4">
-        <div class="card mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom-0"><h5 class="mb-0">Statistik Lainnya</h5></div>
             <div class="card-body">
-                <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                        <span class="badge bg-label-warning p-2"><i class="bx bx-show-alt fs-4"></i></span>
+                        <div class="row g-3">
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 p-3 text-center">
+                                    <div class="text-muted small">Total Views</div>
+                                    <div class="fw-bold fs-4">{{ number_format($totalViews ?? 0) }}</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="bg-light rounded-3 p-3 text-center">
+                                    <div class="text-muted small">Draft</div>
+                                    <div class="fw-bold fs-4">{{ $draftPostsCount ?? 0 }}</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <span class="fw-semibold d-block mb-1">Total Views (Semua Artikel)</span>
-                <h3 class="card-title text-nowrap mb-2">{{ number_format($totalViews ?? 0) }}</h3>
             </div>
         </div>
-        <div class="card">
-            <div class="card-body">
-                <div class="card-title d-flex align-items-start justify-content-between">
-                    <div class="avatar flex-shrink-0">
-                        <span class="badge bg-label-secondary p-2"><i class="bx bx-edit fs-4"></i></span>
+        <div class="row g-4 mb-4">
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom-0"><h5 class="mb-0">Artikel Masuk per Bulan</h5></div>
+                    <div class="card-body">
+                        <canvas id="postsPerMonthChart"></canvas>
                     </div>
                 </div>
-                <span class="fw-semibold d-block mb-1">Artikel Draft</span>
-                <h3 class="card-title text-nowrap mb-1">{{ $draftPostsCount ?? 0 }}</h3>
+            </div>
+            <div class="col-lg-6">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header bg-white border-bottom-0"><h5 class="mb-0">Artikel per Kategori (Bar)</h5></div>
+            <div class="card-body">
+                        <canvas id="postsPerCategoryBarChart"></canvas>
+                    </div>
+                </div>
             </div>
         </div>
-    </div>
-    <!--/ Statistik Tambahan -->
+    @endif
 </div>
-
 @endsection
 
 @push('page-scripts')
@@ -136,11 +240,11 @@
             new Chart(ctx, {
                 type: 'doughnut',
                 data: {
-                    labels: @json($chartLabels),
+                    labels: @json($chartLabelsArray),
                     datasets: [{
                         label: 'Artikel Terpublish',
-                        data: @json($chartData),
-                        backgroundColor: @json($chartColors),
+                        data: @json($chartDataArray),
+                        backgroundColor: @json($chartColorsArray),
                         borderColor: '#fff',
                         borderWidth: 2,
                         hoverOffset: 4
@@ -178,6 +282,60 @@
                                 }
                             }
                         }
+                    }
+                }
+            });
+        }
+        // Grafik dummy: Artikel Masuk per Bulan
+        const postsPerMonthCtx = document.getElementById('postsPerMonthChart');
+        if(postsPerMonthCtx) {
+            new Chart(postsPerMonthCtx, {
+                type: 'line',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'],
+                    datasets: [{
+                        label: 'Artikel Masuk',
+                        data: [12, 19, 8, 15, 22, 30, 25, 18, 20, 24, 17, 21],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59,130,246,0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3B82F6',
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+        // Grafik dummy: Artikel per Kategori (Bar)
+        const postsPerCategoryBarCtx = document.getElementById('postsPerCategoryBarChart');
+        if(postsPerCategoryBarCtx) {
+            new Chart(postsPerCategoryBarCtx, {
+                type: 'bar',
+                data: {
+                    labels: @json($chartLabelsArray),
+                    datasets: [{
+                        label: 'Artikel',
+                        data: @json($chartDataArray),
+                        backgroundColor: @json($chartColorsArray),
+                        borderRadius: 8,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: { display: false },
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
                     }
                 }
             });

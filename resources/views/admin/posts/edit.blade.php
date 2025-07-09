@@ -1,9 +1,9 @@
-@extends('layouts.admin')
+@extends('layouts.admin-new')
 
-@section('header')
-    <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-        {{ __('Edit Artikel') }}: <span class="font-normal">{{ Str::limit($post->title, 50) }}</span>
-        </h2>
+@section('title', 'Edit Artikel')
+
+@section('header-content')
+    <h1 class="text-2xl font-semibold text-gray-800">Edit Artikel</h1>
 @endsection
 
 @section('content')
@@ -11,7 +11,7 @@
         <div class="max-w-3xl mx-auto sm:px-6 lg:px-8">
             <div class="bg-white dark:bg-gray-800 overflow-hidden shadow-md sm:rounded-lg">
                 <div class="p-6 md:p-8 text-gray-900 dark:text-gray-100">
-                    <form action="{{ route('dashboard.posts.update', $post) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
+                    <form action="{{ route('dashboard.posts.update', $post->id) }}" method="POST" enctype="multipart/form-data" class="space-y-6">
                         @method('PATCH')
                         @csrf {{-- Pastikan CSRF token ada di form utama --}}
                         {{-- Variabel $categories sudah otomatis tersedia dari controller, $post dikirim dari sini --}}
@@ -21,4 +21,12 @@
             </div>
         </div>
     </div>
-@endsection 
+@endsection
+
+@push('page-styles')
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+@endpush
+
+@push('page-scripts')
+<script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
+@endpush 

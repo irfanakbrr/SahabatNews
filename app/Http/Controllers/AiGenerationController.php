@@ -7,6 +7,8 @@ use App\Services\UnsplashService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Storage;
+use App\Jobs\GenerateArticle;
+use Illuminate\Support\Facades\Log;
 
 class AiGenerationController extends Controller
 {
@@ -55,28 +57,32 @@ class AiGenerationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'topic' => 'required|string|max:255',
+            'category_id' => 'required|integer|exists:categories,id',
         ]);
 
         if ($validator->fails()) {
-            return response()->json(['error' => $validator->errors()->first()], 422);
+            return response()->json(['success' => false, 'error' => $validator->errors()->first()], 422);
         }
 
-        $articleData = $this->aiContentService->generateFullArticle($request->input('topic'));
+        try {
+            // Dispatch the job to the queue
+            GenerateArticle::dispatch(
+                $request->input('topic'),
+                $request->input('category_id'),
+                auth()->id()
+            );
 
-        if ($articleData) {
             return response()->json([
                 'success' => true,
-                'data' => [
-                    'title' => $articleData['title'],
-                    'content' => $articleData['content'],
-                    'image_prompt' => $articleData['image_prompt'],
-                ]
+                'message' => 'Permintaan pembuatan artikel telah diterima dan sedang diproses di latar belakang. Artikel akan muncul sebagai draf dalam beberapa saat.'
             ]);
-        }
 
-        return response()->json([
-            'success' => false,
-            'error' => 'Gagal membuat konten AI. Cek log untuk detail.'
-        ], 500);
+        } catch (\Exception $e) {
+            Log::error('Gagal men-dispatch GenerateArticle job: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => 'Gagal memulai proses pembuatan artikel. Silakan coba lagi.'
+            ], 500);
+        }
     }
 } 

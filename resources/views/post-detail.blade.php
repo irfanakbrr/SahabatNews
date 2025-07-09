@@ -51,6 +51,14 @@
             <a href="#" onclick="navigator.clipboard.writeText('{{ request()->fullUrl() }}'); return false;" class="text-gray-500 hover:text-gray-700" title="Salin Link">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 0 1 0 5.656m-3.656-3.656a4 4 0 0 1 5.656 0m-7.778 7.778a4 4 0 0 1 5.656 0l1.414-1.414a4 4 0 0 0 0-5.656m-3.656 3.656a4 4 0 0 0 0-5.656L7.05 7.05a4 4 0 0 1 5.656 0"/></svg>
             </a>
+            <div class="flex-grow"></div> <!-- Spacer -->
+            @auth
+            <button id="bookmark-btn" class="flex items-center space-x-2 px-3 py-1 rounded-full border transition-colors duration-200 
+                {{ $isBookmarked ? 'bg-green-600 text-white border-green-600' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100' }}">
+                <i class='bx {{ $isBookmarked ? 'bxs-bookmark' : 'bx-bookmark' }}'></i>
+                <span class="text-sm font-medium">{{ $isBookmarked ? 'Disimpan' : 'Simpan' }}</span>
+            </button>
+            @endauth
         </div>
 
     </article>
@@ -58,7 +66,7 @@
     <!-- Komentar -->
     <section class="max-w-3xl mx-auto mt-8 sm:mt-12 px-4">
         <h2 class="text-xl sm:text-2xl font-semibold mb-4">Komentar ({{ $comments->total() }})</h2>
-        <div class="space-y-6">
+        <div id="comments-list" class="space-y-6">
             @forelse ($comments as $comment)
                 <div class="flex gap-3 {{ !$loop->first ? 'border-t pt-4' : '' }}">
                     {{-- Tampilkan avatar user jika ada --}}
@@ -69,7 +77,7 @@
                     </div>
                 </div>
             @empty
-                <p class="text-gray-500 text-sm">Belum ada komentar.</p>
+                <p id="no-comment-message" class="text-gray-500 text-sm">Belum ada komentar.</p>
             @endforelse
 
             <!-- Pagination Komentar -->
@@ -81,14 +89,14 @@
 
             <!-- Form Tambah Komentar -->
             @auth
-                <form action="{{ route('comments.store', $post) }}" method="POST" class="border-t pt-6">
+                <form id="comment-form" action="{{ route('comments.store', $post) }}" method="POST" class="border-t pt-6">
                      @csrf
                      <h3 class="text-lg font-semibold mb-2">Tinggalkan Komentar</h3>
-                     <textarea name="content" rows="3" placeholder="Tulis komentar Anda..." required class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black mb-3 @error('content') border-red-500 @enderror">{{ old('content') }}</textarea>
+                     <textarea id="comment-content" name="content" rows="3" placeholder="Tulis komentar Anda..." required class="w-full px-4 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-2 focus:ring-black mb-3 @error('content') border-red-500 @enderror">{{ old('content') }}</textarea>
                      @error('content')
                         <p class="text-red-500 text-xs mt-1 mb-2">{{ $message }}</p>
                      @enderror
-                     <button type="submit" class="bg-black text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-gray-800 transition">Kirim Komentar</button>
+                     <button id="comment-submit-btn" type="submit" class="bg-black text-white px-5 py-2 rounded-full font-semibold text-sm hover:bg-gray-800 transition">Kirim Komentar</button>
                 </form>
             @else
                  <p class="text-sm text-gray-500 border-t pt-6">Silakan <a href="{{ route('login') }}" class="text-blue-600 hover:underline">login</a> atau <a href="{{ route('register') }}" class="text-blue-600 hover:underline">register</a> untuk meninggalkan komentar.</p>
@@ -118,4 +126,110 @@
         </section>
     @endif
 
-</x-app-layout> 
+</x-app-layout>
+
+@push('scripts')
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const bookmarkBtn = document.getElementById('bookmark-btn');
+    if(bookmarkBtn) {
+        bookmarkBtn.addEventListener('click', function() {
+            fetch(`{{ route('bookmarks.toggle', $post->id) }}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                const icon = bookmarkBtn.querySelector('i');
+                const text = bookmarkBtn.querySelector('span');
+                if (data.status === 'added') {
+                    bookmarkBtn.classList.add('bg-green-600', 'text-white', 'border-green-600');
+                    bookmarkBtn.classList.remove('bg-white', 'text-gray-700', 'border-gray-300', 'hover:bg-gray-100');
+                    icon.className = 'bx bxs-bookmark';
+                    text.innerText = 'Disimpan';
+                } else {
+                    bookmarkBtn.classList.remove('bg-green-600', 'text-white', 'border-green-600');
+                    bookmarkBtn.classList.add('bg-white', 'text-gray-700', 'border-gray-300', 'hover:bg-gray-100');
+                    icon.className = 'bx bx-bookmark';
+                    text.innerText = 'Simpan';
+                }
+            })
+            .catch(err => console.error(err));
+        });
+    }
+
+    const commentForm = document.getElementById('comment-form');
+    const commentContent = document.getElementById('comment-content');
+    const commentSubmitBtn = document.getElementById('comment-submit-btn');
+    const commentsList = document.getElementById('comments-list');
+    const noCommentMessage = document.getElementById('no-comment-message');
+    const postId = {{ $post->id }};
+
+    // 1. Handle form submission with AJAX
+    if (commentForm) {
+        commentForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+            commentSubmitBtn.disabled = true;
+            commentSubmitBtn.innerText = 'Mengirim...';
+
+            fetch(commentForm.action, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ content: commentContent.value })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if(data.status === 'success') {
+                    commentContent.value = ''; // Clear textarea
+                    // The comment will be added via the Echo listener to avoid duplication.
+                } else {
+                    // Handle error
+                    alert(data.error || 'Gagal mengirim komentar.');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                alert('Terjadi kesalahan. Silakan coba lagi.');
+            })
+            .finally(() => {
+                commentSubmitBtn.disabled = false;
+                commentSubmitBtn.innerText = 'Kirim Komentar';
+            });
+        });
+    }
+
+    // 2. Listen for new comments
+    if (window.Echo) {
+        window.Echo.private(`post.${postId}`)
+            .listen('CommentPosted', (e) => {
+                console.log('New comment received:', e);
+                // Hapus pesan "Belum ada komentar" jika ada
+                if(noCommentMessage) {
+                    noCommentMessage.style.display = 'none';
+                }
+
+                // Buat elemen HTML untuk komentar baru
+                const newCommentEl = document.createElement('div');
+                newCommentEl.classList.add('flex', 'gap-3', 'border-t', 'pt-4');
+                newCommentEl.innerHTML = `
+                    <img src="${e.comment.user.avatar}" alt="${e.comment.user.name}" class="w-10 h-10 rounded-full bg-gray-200">
+                    <div>
+                        <p class="font-semibold text-sm">${e.comment.user.name} <span class="text-gray-400 font-normal text-xs ml-1">• ${e.comment.created_at_human}</span></p>
+                        <p class="text-gray-700 text-sm mt-1">${e.comment.content}</p>
+                    </div>
+                `;
+                
+                // Tambahkan komentar baru di awal list
+                commentsList.prepend(newCommentEl);
+            });
+    }
+});
+</script>
+@endpush 

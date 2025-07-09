@@ -13,6 +13,8 @@ use App\Http\Controllers\CommentController; // Tambahkan ini di atas jika belum 
 use App\Http\Controllers\AiGenerationController; // Tambahkan controller AI
 use Illuminate\Support\Str;
 use App\Models\Category; // Pastikan ini ada
+use App\Http\Controllers\QuranController;
+use App\Http\Controllers\BookmarkController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +44,19 @@ Route::get('/', function () {
 Route::get('/about', function () { return view('about'); })->name('about');
 Route::get('/contact', function () { return view('contact'); })->name('contact');
 Route::get('/podcast', function () { return view('podcast'); })->name('podcast');
+Route::get('/quran', [QuranController::class, 'index'])->name('quran.index');
+Route::get('/quran/{nomor}', [QuranController::class, 'show'])->name('quran.show');
+
+// Prayer times routes
+Route::get('/prayer-times', [App\Http\Controllers\PrayerTimesController::class, 'index'])->name('prayer-times.index');
+Route::post('/prayer-times/location', [App\Http\Controllers\PrayerTimesController::class, 'getByLocation'])->name('prayer-times.location');
+
+// Bookmark routes
+Route::middleware('auth')->group(function () {
+    Route::get('/bookmarks', [BookmarkController::class, 'index'])->name('bookmarks.index');
+    Route::post('/bookmarks/toggle/{post}', [BookmarkController::class, 'toggle'])->name('bookmarks.toggle');
+});
+
 // Route::get('/analytics', function () { return view('analytics'); })->name('analytics'); // Hapus route lama
 Route::get('/analytics', [AnalyticsController::class, 'index'])->middleware(['auth', 'verified', 'checkrole:admin,editor'])->name('analytics'); // Gunakan controller dan tambahkan middleware
 
@@ -76,64 +91,60 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
         Route::get('posts/create', [PostController::class, 'createAdmin'])->name('posts.create');
         Route::post('posts', [PostController::class, 'storeAdmin'])->name('posts.store');
         Route::get('posts/{post}/edit', [PostController::class, 'editAdmin'])->name('posts.edit');
+        Route::get('posts/{post}/edit-simple', [PostController::class, 'editAdminSimple'])->name('posts.edit.simple');
         Route::patch('posts/{post}', [PostController::class, 'updateAdmin'])->name('posts.update');
         Route::delete('posts/{post}', [PostController::class, 'destroyAdmin'])->name('posts.destroy');
 
         // Route untuk AI Content Generation
         Route::post('/generate-image', [AiGenerationController::class, 'generateImage'])->name('image.generate');
         Route::post('/generate-article', [AiGenerationController::class, 'generateArticle'])->name('ai.generate.article');
+
+        // Route untuk AI Assistant
+        Route::post('/ai-assistant/ask', [App\Http\Controllers\Admin\AiAssistantController::class, 'ask'])->name('ai.assistant.ask');
+
+        // ... existing code ...
+        Route::get('pending-posts', [PostController::class, 'pendingPosts'])->name('posts.pending');
+        Route::patch('posts/{post}/approve', [PostController::class, 'approvePost'])->name('posts.approve');
+        Route::delete('posts/{post}/reject', [PostController::class, 'rejectPost'])->name('posts.reject');
     });
 
-    // Manajemen Kategori & Komentar (Hanya Admin)
-    Route::middleware(['checkrole:admin'])->group(function () {
+    // Manajemen Kategori & Komentar (Admin & Editor)
+    Route::middleware(['checkrole:admin,editor'])->group(function () {
         Route::resource('categories', AdminCategoryController::class)->except(['show']);
-        Route::resource('users', AdminUserController::class)->except(['show']);
         Route::resource('comments', App\Http\Controllers\Admin\CommentController::class)->except(['show']);
         Route::patch('comments/{comment}/approve', [App\Http\Controllers\Admin\CommentController::class, 'approve'])->name('comments.approve');
-        Route::resource('pages', App\Http\Controllers\Admin\PageController::class)->only(['index', 'edit', 'update']);
         Route::post('tinymce/upload', [App\Http\Controllers\Admin\TinyMCEController::class, 'uploadImage'])->name('tinymce.upload');
     });
+
+    // Manajemen User & Pages (Hanya Admin)
+    Route::middleware(['checkrole:admin'])->group(function () {
+        Route::resource('users', AdminUserController::class)->except(['show']);
+        Route::resource('pages', App\Http\Controllers\Admin\PageController::class)->only(['index', 'edit', 'update']);
+    });
+
+    // Routes untuk user biasa mengelola artikel mereka
+    Route::get('user-posts', [PostController::class, 'indexUser'])->name('userposts.index');
+    Route::get('user-posts/create', [PostController::class, 'createUser'])->name('userposts.create');
+    Route::post('user-posts', [PostController::class, 'storeUser'])->name('userposts.store');
+    Route::get('user-posts/{post}/edit', [PostController::class, 'editUser'])->name('userposts.edit');
+    Route::patch('user-posts/{post}', [PostController::class, 'updateUser'])->name('userposts.update');
+    Route::delete('user-posts/{post}', [PostController::class, 'destroyUser'])->name('userposts.destroy');
 });
 
-// Route global agar route('dashboard') selalu ada
+// Route dashboard yang berbeda untuk setiap role
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
-    // Cache statistik dashboard selama 5 menit
-    $dashboardStats = \Cache::remember('dashboard_stats', 300, function() {
+    $user = auth()->user();
+    
+    // Redirect admin/editor ke halaman analytics
+    if ($user->hasAnyRole(['admin', 'editor'])) {
+        return app(\App\Http\Controllers\AnalyticsController::class)->index();
+    }
+    
+    // User biasa ke dashboard sederhana
     $postCount = \App\Models\Post::count();
     $userCount = \App\Models\User::count();
     $categoryCount = \App\Models\Category::count();
-    $totalViews = \App\Models\Post::sum('view_count');
-    $draftPostsCount = \App\Models\Post::where('status', 'draft')->count();
-    // Data untuk chart Artikel Terpublish per Kategori
-    $publishedPostsByCategory = \App\Models\Category::withCount([
-        'posts' => fn($query) => $query->where('status', 'published')
-    ])->having('posts_count', '>', 0)->orderBy('posts_count', 'desc')->get();
-    $chartLabels = $publishedPostsByCategory->pluck('name');
-    $chartData = $publishedPostsByCategory->pluck('posts_count');
-    $chartColors = $publishedPostsByCategory->map(function ($category) {
-            if (\Illuminate\Support\Str::startsWith($category->color, '#') || \Illuminate\Support\Str::startsWith($category->color, 'rgb')) {
-            return $category->color;
-            } elseif (\Illuminate\Support\Str::startsWith($category->color, 'bg-')) {
-            $colorMap = [
-                'bg-red-500' => '#EF4444', 'bg-blue-500' => '#3B82F6', 'bg-green-500' => '#22C55E',
-                'bg-yellow-500' => '#EAB308', 'bg-indigo-500' => '#6366F1', 'bg-purple-500' => '#8B5CF6',
-                'bg-pink-500' => '#EC4899', 'bg-gray-500' => '#6B7280', 'bg-sky-500' => '#0EA5E9',
-                'bg-emerald-500' => '#10B981', 'bg-rose-500' => '#F43F5E', 'bg-orange-500' => '#F97316',
-            ];
-                return $colorMap[$category->color] ?? '#' . substr(md5(rand()), 0, 6);
-        }
-            return '#' . substr(md5($category->name), 0, 6);
-        });
-        return compact(
-            'postCount', 'userCount', 'categoryCount', 'totalViews', 'draftPostsCount',
-            'chartLabels', 'chartData', 'chartColors'
-        );
-    });
-    extract($dashboardStats);
-    return view('dashboard', compact(
-        'postCount', 'userCount', 'categoryCount', 'totalViews', 'draftPostsCount',
-        'chartLabels', 'chartData', 'chartColors'
-    ));
+    return view('dashboard', compact('postCount', 'userCount', 'categoryCount'));
 })->name('dashboard');
 
 // Route global agar route('profile.edit') selalu ada
@@ -150,28 +161,37 @@ Route::get('/login/{provider}', [SocialiteController::class, 'redirectToProvider
 Route::get('/login/{provider}/callback', [SocialiteController::class, 'handleProviderCallback'])->name('socialite.callback');
 
 Route::get('/load-more-posts', function (\Illuminate\Http\Request $request) {
-    $page = (int) $request->input('page', 2);
-    $perPage = 6;
-    $skip = 5 + ($page - 2) * $perPage; // 5 berita utama sudah tampil, page=2 mulai dari index ke-5
+    $page = (int) $request->input('page', 1); // Request pertama dari JS adalah untuk halaman data ke-1
+    $perPage = 6; // Jumlah post yang di-load setiap kali
+    
+    // 11 post sudah ditampilkan (1 main + 3 side + 7 bottom).
+    // Halaman 1 (req pertama) -> skip 11, ambil 6
+    // Halaman 2 (req kedua) -> skip 11 + 6, ambil 6
+    $postsToSkip = 11 + ($page - 1) * $perPage;
+
     $posts = \App\Models\Post::where('status', 'published')
         ->latest('published_at')
-        ->skip($skip)
+        ->skip($postsToSkip)
         ->take($perPage)
-        ->with('category')
+        ->with('category') // Eager load untuk efisiensi
         ->get()
         ->map(function($post) {
+            // Pastikan format data konsisten
             return [
                 'slug' => $post->slug,
                 'title' => $post->title,
-                'image' => $post->image,
+                'image_url' => $post->image ? \Storage::url($post->image) : 'https://via.placeholder.com/400x250?text=No+Image',
                 'category' => $post->category ? ['name' => $post->category->name, 'color' => $post->category->color] : null,
-                'published_at' => $post->published_at,
+                'published_at_formatted' => $post->published_at ? $post->published_at->format('d M Y') : '-',
             ];
         });
     return response()->json($posts);
-});
+})->name('load.more.posts');
 
 Route::view('/terms', 'terms')->name('terms');
 Route::view('/privacy', 'privacy')->name('privacy');
+
+// Route untuk hasil pencarian
+Route::get('/search', [PostController::class, 'search'])->name('search');
 
 require __DIR__.'/auth.php';

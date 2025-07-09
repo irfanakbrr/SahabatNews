@@ -12,7 +12,7 @@
 
     {{-- Card Statistik --}}
     <div class="row">
-        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -24,11 +24,11 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0">Total Views (Semua Artikel)</h6>
+                        <h6 class="card-title mb-0">Total Views</h6>
                         <span class="badge bg-label-warning p-2"><i class="bx bx-show-alt fs-4"></i></span>
                     </div>
                     <h3 class="fw-semibold d-block my-2">{{ number_format($totalViewsAllPosts ?? 0) }}</h3>
@@ -36,7 +36,19 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-4 col-md-6 col-sm-6 mb-4">
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">Total Komentar</h6>
+                        <span class="badge bg-label-info p-2"><i class="bx bx-comment-detail fs-4"></i></span>
+                    </div>
+                    <h3 class="fw-semibold d-block my-2">{{ number_format($totalComments ?? 0) }}</h3>
+                    <small class="text-muted">Komentar yang disetujui</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-3 col-md-6 col-sm-6 mb-4">
             <div class="card">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-center">
@@ -70,8 +82,68 @@
         </div>
     </div>
 
+    <div class="row mt-4">
+        <!-- Penulis Teratas -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title m-0 me-2">Penulis Teratas</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="p-0 m-0">
+                        @forelse($prolificAuthors as $author)
+                        <li class="d-flex mb-4 pb-1">
+                            <div class="avatar flex-shrink-0 me-3">
+                                <img src="{{ $author->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($author->name).'&background=random' }}" alt="{{ $author->name }}" class="rounded-circle">
+                            </div>
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">{{ $author->name }}</h6>
+                                    <small class="text-muted">{{ $author->email }}</small>
+                                </div>
+                                <div class="user-progress">
+                                    <small class="fw-semibold">{{ $author->posts_count }} Artikel</small>
+                                </div>
+                            </div>
+                        </li>
+                        @empty
+                        <p class="text-muted text-center">Data penulis belum tersedia.</p>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Kategori Populer -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h5 class="card-title m-0 me-2">Kategori Populer</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="p-0 m-0">
+                        @forelse($popularCategories as $category)
+                        <li class="d-flex mb-4 pb-1">
+                            <div class="d-flex w-100 flex-wrap align-items-center justify-content-between gap-2">
+                                <div class="me-2">
+                                    <h6 class="mb-0">{{ $category->name }}</h6>
+                                </div>
+                                <div class="user-progress">
+                                    <small class="fw-semibold">{{ $category->posts_count }} Artikel</small>
+                                </div>
+                            </div>
+                        </li>
+                        @empty
+                        <p class="text-muted text-center">Data kategori belum tersedia.</p>
+                        @endforelse
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Top 10 Artikel Paling Banyak Dilihat -->
-    <div class="card">
+    <div class="card mt-4">
         <div class="card-header">
             <h5 class="card-title mb-0">Top 10 Artikel Populer</h5>
         </div>

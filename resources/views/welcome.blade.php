@@ -9,7 +9,9 @@
 
         <!-- Search Bar -->
         <div class="mb-3 sm:mb-4">
-            <input type="text" placeholder="Search" class="w-full px-3 py-2 sm:px-5 sm:py-3 rounded-full border border-gray-200 bg-[#F7F7F9] focus:outline-none focus:ring-2 focus:ring-black text-sm sm:text-base md:text-lg" />
+            <form action="{{ route('search') }}" method="GET">
+                <input type="text" name="q" placeholder="Cari berita, topik, atau apa pun..." class="w-full px-3 py-2 sm:px-5 sm:py-3 rounded-full border border-gray-200 bg-[#F7F7F9] focus:outline-none focus:ring-2 focus:ring-black text-sm sm:text-base md:text-lg" required />
+            </form>
         </div>
 
         <!-- Filter Kategori -->
@@ -120,52 +122,58 @@
 
 @push('scripts')
 <script>
-let page = 2;
-const loadMoreBtn = document.getElementById('load-more-btn');
-const grid = document.querySelector('#load-more-grid .grid-news');
-console.log('Grid element:', grid);
-if(loadMoreBtn) {
-    loadMoreBtn.addEventListener('click', function() {
-        console.log('Load more clicked', grid);
-        loadMoreBtn.disabled = true;
-        loadMoreBtn.innerText = 'Memuat...';
-        fetch('/load-more-posts?page=' + page)
-            .then(res => res.json())
-            .then(posts => {
-                console.log('Fetched posts:', posts);
-                if(posts.length === 0) {
-                    loadMoreBtn.disabled = true;
-                    loadMoreBtn.innerText = 'Tidak ada berita lagi';
-                    return;
-                }
-                if (!grid) {
-                  alert('Grid berita tidak ditemukan!');
-                  return;
-                }
-                posts.forEach(post => {
-                    let card = document.createElement('a');
-                    card.href = '/posts/' + post.slug;
-                    card.className = 'bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group';
-                    card.innerHTML = `
-                        <img src="${post.image ? '/storage/' + post.image : 'https://via.placeholder.com/400x250?text=No+Image'}" alt="${post.title}" class="w-full h-40 object-cover" loading="lazy">
-                        <div class=\"p-4 flex-1 flex flex-col\">
-                            <span class=\"inline-block ${post.category && post.category.color ? post.category.color : 'bg-gray-500'} text-white text-xs font-semibold px-2 py-1 rounded mb-2\">${post.category ? post.category.name : ''}</span>
-                            <div class=\"font-semibold text-base mb-1 group-hover:text-indigo-600 transition\">${post.title}</div>
-                            <div class=\"text-xs text-gray-500\">${post.published_at ? new Date(post.published_at).toLocaleDateString('id-ID') : '-'}</div>
-                        </div>
-                    `;
-                    grid.appendChild(card);
+document.addEventListener('DOMContentLoaded', function() {
+    let currentPage = 1;
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    const grid = document.querySelector('#load-more-grid .grid-news');
+
+    if (loadMoreBtn && grid) {
+        loadMoreBtn.addEventListener('click', function() {
+            loadMoreBtn.disabled = true;
+            loadMoreBtn.innerHTML = `<i class='bx bx-loader-alt bx-spin mr-2'></i> Memuat...`;
+
+            fetch(`{{ route('load.more.posts') }}?page=${currentPage}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.length > 0) {
+                        data.forEach(post => {
+                            const card = document.createElement('a');
+                            card.href = `/posts/${post.slug}`;
+                            card.className = 'bg-white rounded-xl shadow-sm hover:shadow-md transition flex flex-col overflow-hidden group';
+                            
+                            const categoryColor = post.category ? post.category.color : 'bg-gray-500';
+                            const categoryName = post.category ? post.category.name : 'Uncategorized';
+
+                            card.innerHTML = `
+                                <img src="${post.image_url}" alt="${post.title}" class="w-full h-40 object-cover" loading="lazy">
+                                <div class="p-4 flex-1 flex flex-col">
+                                    <span class="inline-block ${categoryColor} text-white text-xs font-semibold px-2 py-1 rounded mb-2">${categoryName}</span>
+                                    <div class="font-semibold text-base mb-1 group-hover:text-green-600 transition">${post.title}</div>
+                                    <div class="text-xs text-gray-500">${post.published_at_formatted}</div>
+                                </div>
+                            `;
+                            grid.appendChild(card);
+                        });
+                        currentPage++;
+                        loadMoreBtn.disabled = false;
+                        loadMoreBtn.innerHTML = 'Muat Berita Lain';
+                    } else {
+                        loadMoreBtn.innerText = 'Tidak Ada Berita Lagi';
+                        // Tombol tetap disabled
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching more posts:', error);
+                    loadMoreBtn.disabled = false;
+                    loadMoreBtn.innerText = 'Gagal Memuat. Coba Lagi';
                 });
-                page++;
-                loadMoreBtn.disabled = false;
-                loadMoreBtn.innerText = 'Muat Berita Lain';
-            })
-            .catch(() => {
-                loadMoreBtn.disabled = false;
-                loadMoreBtn.innerText = 'Muat Berita Lain';
-                alert('Gagal memuat berita. Silakan coba lagi.');
-            });
-    });
-}
+        });
+    }
+});
 </script>
 @endpush

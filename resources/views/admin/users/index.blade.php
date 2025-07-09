@@ -1,82 +1,74 @@
-@extends('layouts.admin')
+@extends('layouts.admin-new')
 
-@section('header')
-    Manajemen User
+@section('title', 'Manajemen Pengguna')
+
+@section('header-content')
+    <div class="flex items-center justify-between w-full">
+        <h1 class="text-2xl font-semibold text-gray-800">Manajemen Pengguna</h1>
+        <a href="{{ route('dashboard.users.create') }}" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700 flex items-center">
+            <i class='bx bx-plus mr-1'></i>
+            Tambah Pengguna
+        </a>
+    </div>
 @endsection
 
 @section('content')
-<div class="card">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="mb-0">Daftar User</h5>
-        <a href="{{ route('dashboard.users.create') }}" class="btn btn-primary btn-sm">
-            <i class="bx bx-plus me-1"></i> Tambah User
-            </a>
-        </div>
-    <div class="card-body">
-        <div class="table-responsive text-nowrap">
-            <table class="table table-hover">
-                <thead class="table-light">
-                                <tr>
-                        <th>Nama</th>
-                        <th>Email</th>
-                        <th>Role</th>
-                        <th>Tanggal Bergabung</th>
-                        <th class="text-center">Aksi</th>
-                                </tr>
-                            </thead>
-                <tbody class="table-border-bottom-0">
-                                @forelse ($users as $user)
-                                    <tr>
-                            <td><strong>{{ $user->name }}</strong></td>
-                            <td>{{ $user->email }}</td>
-                            <td>
-                                @if($user->role)
-                                    <span class="badge 
-                                        @switch($user->role->name)
-                                            @case('admin') bg-danger @break
-                                            @case('editor') bg-info @break
-                                            @default bg-secondary @break
-                                        @endswitch
-                                    ">{{ ucfirst($user->role->name) }}</span>
-                                @else
-                                    <span class="badge bg-light text-dark">N/A</span>
-                                @endif
-                                        </td>
-                            <td>{{ $user->created_at->format('d M Y') }}</td>
-                            <td class="text-center">
-                                            @if($user->id !== auth()->id())
-                                    <div class="d-inline-flex">
-                                        <a href="{{ route('dashboard.users.edit', $user) }}" class="btn btn-sm btn-info me-2" title="Edit">
-                                            <i class="bx bx-edit-alt"></i>
-                                        </a>
-                                        <form action="{{ route('dashboard.users.destroy', $user) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus user ini?');">
-                                                    @csrf
-                                                    @method('DELETE')
-                                            <button type="submit" class="btn btn-sm btn-danger" title="Hapus">
-                                                <i class="bx bx-trash"></i>
-                                            </button>
-                                                </form>
-                                    </div>
-                                            @else
-                                    <span class="badge bg-light text-dark">(Anda)</span>
-                                            @endif
-                                        </td>
-                                    </tr>
-                                @empty
-                                    <tr>
-                            <td colspan="5" class="text-center py-4">
-                                Belum ada user.
-                                        </td>
-                                    </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    </div>
+<div class="p-6 bg-white rounded-lg shadow-md">
+    <div class="overflow-x-auto">
+        <table class="min-w-full text-sm text-left text-gray-500">
+            <thead class="text-xs text-gray-700 uppercase bg-gray-50">
+                <tr>
+                    <th scope="col" class="px-6 py-3">Nama</th>
+                    <th scope="col" class="px-6 py-3">Email</th>
+                    <th scope="col" class="px-6 py-3">Role</th>
+                    <th scope="col" class="px-6 py-3">Tanggal Bergabung</th>
+                    <th scope="col" class="px-6 py-3 text-right">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($users as $user)
+                <tr class="bg-white border-b hover:bg-gray-50">
+                    <th scope="row" class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <img class="w-8 h-8 mr-3 rounded-full" src="{{ $user->avatar ?? 'https://ui-avatars.com/api/?name='.urlencode($user->name).'&background=random' }}" alt="{{ $user->name }}">
+                            <span>{{ $user->name }}</span>
+                        </div>
+                    </th>
+                    <td class="px-6 py-4">{{ $user->email }}</td>
+                    <td class="px-6 py-4 uppercase text-xs font-semibold">{{ $user->role->name ?? 'N/A' }}</td>
+                    <td class="px-6 py-4">{{ $user->created_at->format('d M Y') }}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex items-center justify-end space-x-2">
+                            <a href="{{ route('dashboard.users.edit', $user->id) }}" class="p-2 text-blue-500 bg-blue-100 rounded-full hover:bg-blue-200" title="Edit">
+                                <i class='bx bxs-edit'></i>
+                            </a>
+                            @if(Auth::id() !== $user->id)
+                            <form action="{{ route('dashboard.users.destroy', $user->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengguna ini?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="p-2 text-red-500 bg-red-100 rounded-full hover:bg-red-200" title="Hapus">
+                                    <i class='bx bxs-trash'></i>
+                                </button>
+                            </form>
+                            @endif
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                        Belum ada pengguna.
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+
     @if ($users->hasPages())
-        <div class="card-footer">
-            {{ $users->links('pagination::bootstrap-5') }}
+        <div class="mt-4">
+            {{ $users->links() }}
         </div>
     @endif
-    </div>
+</div>
 @endsection 

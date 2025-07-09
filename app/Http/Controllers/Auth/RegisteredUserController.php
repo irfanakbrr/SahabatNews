@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
+use App\Events\UserRegistered;
 
 class RegisteredUserController extends Controller
 {
@@ -31,21 +32,27 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
+            'username' => ['nullable', 'string', 'max:255', 'unique:'.User::class, 'alpha_dash'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'phone' => ['nullable', 'string', 'max:20'],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
         ]);
 
         $user = User::create([
             'name' => $request->name,
+            'username' => $request->username,
             'email' => $request->email,
+            'phone' => $request->phone,
             'password' => Hash::make($request->password),
             'role_id' => 3,
         ]);
 
         event(new Registered($user));
+        
+        UserRegistered::dispatch($user);
 
         Auth::login($user);
 
-        return redirect('/');
+        return redirect(route('dashboard', absolute: false));
     }
 }

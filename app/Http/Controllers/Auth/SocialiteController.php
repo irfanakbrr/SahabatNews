@@ -53,7 +53,7 @@ class SocialiteController extends Controller
             if ($user) {
                 // Jika user ditemukan, login
                 Auth::login($user);
-                return redirect()->intended(route('dashboard.index', absolute: false));
+                return redirect()->intended(route('dashboard', absolute: false));
             } else {
                 // Jika tidak ada, cek berdasarkan email
                 $user = User::where('email', $socialUser->getEmail())->first();
@@ -67,7 +67,7 @@ class SocialiteController extends Controller
                         'avatar' => $socialUser->getAvatar(), // Update avatar jika ada
                     ]);
                     Auth::login($user);
-                    return redirect()->intended(route('dashboard.index', absolute: false));
+                    return redirect()->intended(route('dashboard', absolute: false));
                 } else {
                     // Email belum terdaftar, buat user baru
                     $newUser = User::create([
@@ -82,7 +82,7 @@ class SocialiteController extends Controller
                     ]);
 
                     Auth::login($newUser);
-                    return redirect()->intended(route('dashboard.index', absolute: false));
+                    return redirect()->intended(route('dashboard', absolute: false));
                 }
             }
 

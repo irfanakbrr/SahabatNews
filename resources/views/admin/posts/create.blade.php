@@ -1,169 +1,56 @@
-@extends('layouts.admin')
+@extends('layouts.admin-new')
 
-@section('header')
-    <h5 class="mb-0">{{ __('Tambah Artikel Baru') }}</h5>
+@section('title', 'Tambah Artikel Baru')
+
+@section('header-content')
+    <h1 class="text-2xl font-semibold text-gray-800">Tambah Artikel Baru</h1>
 @endsection
 
 @section('content')
+<div x-data="{ isAiModalOpen: false }">
+    <form action="{{ route('dashboard.posts.store') }}" method="POST" enctype="multipart/form-data">
+        @include('admin.posts._form')
+    </form>
 
-{{-- Modal untuk AI Generator --}}
-<div class="modal fade" id="aiGeneratorModal" tabindex="-1" aria-labelledby="aiGeneratorModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="aiGeneratorModalLabel">🚀 Buat Draf Cepat dengan AI</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <p class="text-muted small">
-            Masukkan topik berita, dan AI akan membuatkan draf judul, isi berita, dan saran prompt gambar untuk Anda.
-        </p>
-        <div class="input-group">
-            <input type="text" id="ai_topic_input" class="form-control form-control-lg" placeholder="Contoh: Manfaat minum kopi di pagi hari">
-            <button class="btn btn-primary" type="button" id="generateArticleButton">
-                <span id="articleSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                <span id="generateArticleBtnText">Generate</span>
-            </button>
+    <!-- AI Generation Modal -->
+    <div x-show="isAiModalOpen" @keydown.escape.window="isAiModalOpen = false" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50" style="display: none;">
+        <div @click.away="isAiModalOpen = false" class="w-full max-w-lg p-6 mx-4 bg-white rounded-lg shadow-xl">
+            <h3 class="text-lg font-semibold text-gray-800">Buat Draf Cepat dengan AI</h3>
+            <p class="mt-1 text-sm text-gray-600">Masukkan topik artikel, dan biarkan AI membuat draf pertama untuk Anda. Draf akan otomatis tersimpan di daftar artikel.</p>
+            
+            <div class="mt-4 space-y-4">
+                <div>
+                    <label for="ai-topic" class="block text-sm font-medium text-gray-700">Topik Artikel</label>
+                    <input type="text" id="ai-topic" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500" placeholder="cth: Dampak AI pada industri media">
+                </div>
+                <div>
+                    <label for="ai-category" class="block text-sm font-medium text-gray-700">Pilih Kategori</label>
+                    <select id="ai-category" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-green-500 focus:ring-green-500">
+                        @foreach($categories as $cat)
+                            <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end space-x-3">
+                <button @click="isAiModalOpen = false" type="button" class="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200">
+                    Batal
+                </button>
+                <button id="ai-submit-btn" type="button" class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-lg hover:bg-green-700">
+                    Mulai Buat Draf
+                </button>
+            </div>
         </div>
-        <div id="ai-error" class="text-danger mt-2 d-none"></div>
-      </div>
     </div>
-  </div>
 </div>
-
-{{-- Form utama --}}
-<form id="articleForm" action="{{ route('dashboard.posts.store') }}" method="POST" enctype="multipart/form-data">
-    @csrf
-    <div class="row">
-        {{-- Kolom utama untuk semua konten --}}
-        <div class="col-12">
-
-            <!-- Card Konten Artikel -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <h5 class="card-title mb-0">Konten Artikel</h5>
-                     <button class="btn btn-success btn-sm" type="button" data-bs-toggle="modal" data-bs-target="#aiGeneratorModal">
-                        <i class='bx bxs-magic-wand me-1'></i> Buat dengan AI
-                    </button>
-                </div>
-                <div class="card-body">
-                    <!-- Judul -->
-                    <div class="mb-3">
-                        <label for="title" class="form-label">Judul Artikel</label>
-                        <input type="text" name="title" id="title" class="form-control form-control-lg @error('title') is-invalid @enderror" value="{{ old('title', $post->title ?? '') }}" required placeholder="Masukkan judul berita di sini...">
-                        @error('title')
-                            <div class="invalid-feedback">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    <!-- Konten -->
-                    <div>
-                        <label for="content" class="form-label">Isi Konten</label>
-                        <input id="content" type="hidden" name="content" value="{{ old('content', $post->content ?? '') }}">
-                        <trix-editor input="content" class="form-control trix-content @error('content') is-invalid @enderror" style="min-height: 300px;"></trix-editor>
-                        @error('content')
-                            <div class="invalid-feedback d-block">{{ $message }}</div>
-                        @enderror
-                    </div>
-                </div>
-            </div>
-
-             <!-- Card Gambar Sampul -->
-            <div class="card mb-4">
-                <div class="card-header"><h5 class="card-title mb-0">Gambar Sampul</h5></div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                             <img id="imagePreview" src="{{ $post->image_url ?? 'https://via.placeholder.com/800x400.png?text=Preview+Gambar' }}" alt="Preview Gambar" class="img-fluid rounded" style="width: 100%; aspect-ratio: 16/9; object-fit: cover;">
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="nav nav-pills nav-fill mb-3" id="imageTab" role="tablist">
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link active" id="nav-ai-tab" data-bs-toggle="tab" data-bs-target="#nav-ai" type="button" role="tab" aria-controls="nav-ai" aria-selected="true">
-                                        <i class='bx bx-search-alt me-1'></i> Unsplash
-                                    </button>
-                                </li>
-                                <li class="nav-item" role="presentation">
-                                    <button class="nav-link" id="nav-manual-tab" data-bs-toggle="tab" data-bs-target="#nav-manual" type="button" role="tab" aria-controls="nav-manual" aria-selected="false">
-                                       <i class='bx bx-upload me-1'></i> Upload
-                                    </button>
-                                </li>
-                            </ul>
-
-                            <div class="tab-content" id="nav-tabContent">
-                                <div class="tab-pane fade show active" id="nav-ai" role="tabpanel" aria-labelledby="nav-ai-tab">
-                                    <div class="mb-3">
-                                        <label for="ai_prompt" class="form-label">Kata Kunci Gambar (Inggris)</label>
-                                        <textarea class="form-control @error('ai_prompt') is-invalid @enderror" id="ai_prompt" rows="3" placeholder="Contoh: 'Man reading a newspaper with a coffee'"></textarea>
-                                    </div>
-                                    <button type="button" class="btn btn-info w-100" id="generateImageButton">
-                                        <span id="imageSpinner" class="spinner-border spinner-border-sm d-none" role="status" aria-hidden="true"></span>
-                                        <span id="generateImageButtonText">Cari Gambar</span>
-                                    </button>
-                                </div>
-                                <div class="tab-pane fade" id="nav-manual" role="tabpanel" aria-labelledby="nav-manual-tab">
-                                    <label for="manual_image" class="form-label">Pilih file dari komputer</label>
-                                    <input type="file" name="manual_image" id="manual_image" class="form-control @error('manual_image') is-invalid @enderror">
-                                     @error('manual_image')
-                                        <div class="invalid-feedback">{{ $message }}</div>
-                                    @enderror
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Card Publikasi -->
-            <div class="card mb-4">
-                <div class="card-header"><h5 class="card-title mb-0">Publikasi</h5></div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3 mb-md-0">
-                             <label for="category_id" class="form-label">Kategori</label>
-                            <select name="category_id" id="category_id" class="form-select @error('category_id') is-invalid @enderror" required>
-                                <option value="">Pilih Kategori</option>
-                                @foreach($categories as $category)
-                                    <option value="{{ $category->id }}" {{ old('category_id', $post->category_id ?? '') == $category->id ? 'selected' : '' }}>
-                                        {{ $category->name }}
-                                    </option>
-                                @endforeach
-                            </select>
-                             @error('category_id')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <div class="col-md-6">
-                            <label for="status" class="form-label">Status</label>
-                            <select name="status" id="status" class="form-select @error('status') is-invalid @enderror" required>
-                                <option value="draft" {{ old('status', $post->status ?? 'draft') == 'draft' ? 'selected' : '' }}>Draft</option>
-                                <option value="published" {{ old('status', $post->status ?? '') == 'published' ? 'selected' : '' }}>Published</option>
-                            </select>
-                            @error('status')
-                                <div class="invalid-feedback">{{ $message }}</div>
-                            @enderror
-                        </div>
-                    </div>
-                </div>
-                <div class="card-footer text-end">
-                     <a href="{{ route('dashboard.posts.index') }}" class="btn btn-outline-secondary">Batal</a>
-                    <button type="submit" id="saveArticleButton" class="btn btn-primary">
-                        {{ ($post->exists) ? 'Update Artikel' : 'Simpan Artikel' }}
-                    </button>
-                </div>
-            </div>
-
-        </div>
-    </div>
-
-    <!-- Hidden Inputs -->
-    <input type="hidden" name="cover_image_path" id="cover_image_path" value="{{ old('cover_image_path', $post->cover_image_path ?? '') }}">
-    <input type="hidden" name="is_ai_generated" id="is_ai_generated" value="{{ old('is_ai_generated', $post->is_ai_generated ?? '0') }}">
-</form>
-
 @endsection
 
+@push('page-styles')
+<link rel="stylesheet" type="text/css" href="https://unpkg.com/trix@2.0.8/dist/trix.css">
+@endpush
+
 @push('page-scripts')
+<script type="text/javascript" src="https://unpkg.com/trix@2.0.8/dist/trix.umd.min.js"></script>
 <script>
 // Menjaga script Trix attachment tetap ada
 document.addEventListener('trix-attachment-add', function(event) {
@@ -201,213 +88,107 @@ function uploadTrixFileAttachment(attachment) {
 
 
 document.addEventListener('DOMContentLoaded', function () {
+    const aiSubmitBtn = document.getElementById('ai-submit-btn');
+    const aiTopicInput = document.getElementById('ai-topic');
+    const aiCategorySelect = document.getElementById('ai-category');
+    
+    // Listen for the custom event dispatched from the form
+    document.addEventListener('open-ai-modal', () => {
+        document.querySelector('[x-data]').__x.$data.isAiModalOpen = true;
+    });
 
-    function initializePageLogic() {
-        const aiGeneratorModal = new bootstrap.Modal(document.getElementById('aiGeneratorModal'));
+    aiSubmitBtn.addEventListener('click', function () {
+        const topic = aiTopicInput.value;
+        const categoryId = aiCategorySelect.value;
 
-        // === TOAST NOTIFICATION FUNCTION ===
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
-            if (!toastContainer) return;
-
-            const toastId = 'toast-' + Date.now();
-            const bgClass = {
-                success: 'bg-success',
-                error: 'bg-danger',
-                info: 'bg-info',
-                warning: 'bg-warning'
-            }[type] || 'bg-secondary';
-
-            const toastHTML = `
-                <div id="${toastId}" class="toast align-items-center text-white ${bgClass} border-0" role="alert" aria-live="assertive" aria-atomic="true">
-                    <div class="d-flex">
-                        <div class="toast-body">
-                            ${message}
-                        </div>
-                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                    </div>
-                </div>
-            `;
-            
-            toastContainer.insertAdjacentHTML('beforeend', toastHTML);
-            
-            const toastElement = document.getElementById(toastId);
-            const toast = new bootstrap.Toast(toastElement, { delay: 5000 });
-            toast.show();
-            toastElement.addEventListener('hidden.bs.toast', () => toastElement.remove());
+        if (!topic.trim()) {
+            alert('Topik tidak boleh kosong.');
+            return;
         }
 
-        // === ELEMENTS ===
-        const titleInput = document.getElementById('title');
-        const trixEditorElement = document.querySelector('trix-editor');
-        const imagePreview = document.getElementById('imagePreview');
-        const coverImagePathInput = document.getElementById('cover_image_path');
-        const isAiGeneratedInput = document.getElementById('is_ai_generated');
-        const aiPromptInput = document.getElementById('ai_prompt');
-        const manualImageInput = document.getElementById('manual_image');
-        const aiErrorDiv = document.getElementById('ai-error');
-        const aiTopicInput = document.getElementById('ai_topic_input');
+        aiSubmitBtn.disabled = true;
+        aiSubmitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Memproses...';
 
-        // === BUTTONS & SPINNERS ===
-        const generateArticleButton = document.getElementById('generateArticleButton');
-        const articleSpinner = document.getElementById('articleSpinner');
-        const generateArticleBtnText = document.getElementById('generateArticleBtnText');
-        const generateImageButton = document.getElementById('generateImageButton');
-        const imageSpinner = document.getElementById('imageSpinner');
-        const saveArticleButton = document.getElementById('saveArticleButton');
-
-        // === LOADING STATES ===
-        function setArticleLoading(isLoading) {
-            generateArticleButton.disabled = isLoading;
-            if (isLoading) {
-                articleSpinner.classList.remove('d-none');
-                generateArticleBtnText.textContent = 'Membuat...';
+        fetch('{{ route("dashboard.ai.generate.article") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ topic: topic, category_id: categoryId })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                document.querySelector('[x-data]').__x.$data.isAiModalOpen = false;
+                // Maybe add a toast notification here later
+                alert('Berhasil! Draf artikel sedang dibuat di latar belakang dan akan segera muncul di daftar artikel.');
             } else {
-                articleSpinner.classList.add('d-none');
-                generateArticleBtnText.textContent = 'Generate';
+                alert('Gagal: ' + (data.error || 'Terjadi kesalahan.'));
             }
-        }
+        })
+        .catch(err => {
+            console.error(err);
+            alert('Terjadi kesalahan koneksi.');
+        })
+        .finally(() => {
+            aiSubmitBtn.disabled = false;
+            aiSubmitBtn.innerHTML = 'Mulai Buat Draf';
+        });
+    });
 
-        function setImageRegenLoading(isLoading) {
-            const button = document.getElementById('generateImageButton');
-            const spinner = document.getElementById('imageSpinner');
-            const buttonTextSpan = button.querySelector('span:not(.spinner-border)'); 
-
-            if (!button || !spinner || !buttonTextSpan) return;
-
-            button.disabled = isLoading;
-            if (isLoading) {
-                spinner.classList.remove('d-none');
-                buttonTextSpan.textContent = 'Mencari...';
-                imagePreview.style.opacity = '0.5';
-            } else {
-                spinner.classList.add('d-none');
-                buttonTextSpan.textContent = 'Cari Gambar';
-                imagePreview.style.opacity = '1';
-            }
-        }
-
-        function showAiError(message) {
-            aiErrorDiv.textContent = message;
-            aiErrorDiv.classList.remove('d-none');
-        }
-
-        // === EVENT: GENERATE FULL ARTICLE ===
-        generateArticleButton.addEventListener('click', async function () {
-            const topic = aiTopicInput.value;
-            if (!topic) {
-                showToast('Silakan masukkan topik berita.', 'warning');
+    // --- Logic for AI Editor Actions ---
+    const trixEditor = document.querySelector('trix-editor');
+    document.querySelectorAll('.ai-editor-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const action = this.dataset.action;
+            const editor = trixEditor.editor;
+            const selectedRange = editor.getSelectedRange();
+            
+            if (selectedRange[0] === selectedRange[1]) {
+                alert('Silakan pilih (sorot) teks di dalam editor terlebih dahulu.');
                 return;
             }
 
-            setArticleLoading(true);
-            aiErrorDiv.classList.add('d-none');
-            showToast('AI sedang membuat draf artikel untuk Anda...', 'info');
-
-            try {
-                const response = await fetch('{{ route("dashboard.ai.generate.article") }}', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                    body: JSON.stringify({ topic: topic })
-                });
-                const result = await response.json();
-
-                if (result.success) {
-                    titleInput.value = result.data.title;
-                    trixEditorElement.editor.loadHTML(result.data.content);
-                    aiPromptInput.value = result.data.image_prompt;
-                    imagePreview.src = 'https://via.placeholder.com/800x400.png?text=Cari+gambar+dengan+kata+kunci';
-                    coverImagePathInput.value = '';
-                    isAiGeneratedInput.value = '0';
-                    manualImageInput.value = '';
-                    new bootstrap.Tab(document.getElementById('nav-ai-tab')).show();
-                    aiGeneratorModal.hide();
-                    showToast('Draf artikel berhasil dibuat! Sekarang cari gambarnya.', 'success');
-                } else {
-                    const errorMessage = result.error || 'Gagal membuat artikel.';
-                    showAiError(errorMessage);
-                    showToast(`Error: ${errorMessage}`, 'error');
-                }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                const connErrorMessage = 'Terjadi kesalahan koneksi.';
-                showAiError(connErrorMessage);
-                showToast(connErrorMessage, 'error');
-            } finally {
-                setArticleLoading(false);
-            }
-        });
-
-        // === EVENT: RE-GENERATE IMAGE ONLY ===
-        generateImageButton.addEventListener('click', async function () {
-            const prompt = aiPromptInput.value;
-            if (!prompt) {
-                showToast('Silakan masukkan kata kunci gambar (prompt).', 'warning');
-                return;
-            }
+            const selectedText = editor.getDocument().getStringAtRange(selectedRange);
             
-            setImageRegenLoading(true);
-            showToast('Unsplash sedang mencari gambar...', 'info');
+            // Simpan posisi kursor/seleksi
+            editor.setSelectedRange(selectedRange);
 
-            try {
-                const response = await fetch('{{ route("dashboard.image.generate") }}', { 
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}'},
-                    body: JSON.stringify({ prompt: prompt })
-                });
-                const result = await response.json();
-                if (result.success) {
-                    imagePreview.src = result.url;
-                    coverImagePathInput.value = result.path;
-                    isAiGeneratedInput.value = '0'; // Gambar dari Unsplash tidak dianggap AI generated
-                    manualImageInput.value = '';
-                    showToast('Gambar berhasil ditemukan!', 'success');
-                } else {
-                    const errorMessage = result.error || 'Gagal mencari gambar.';
-                    showToast(`Error: ${errorMessage}`, 'error');
+            // Kirim ke AI
+            askEditorAI(selectedText, action, (newText) => {
+                if(newText) {
+                    editor.insertString(newText);
                 }
-            } catch (error) {
-                console.error('Fetch error:', error);
-                showToast('Terjadi kesalahan koneksi saat mencari gambar.', 'error');
-            } finally {
-                setImageRegenLoading(false);
-            }
+            });
         });
-        
-        // === EVENT: MANUAL UPLOAD ===
-        manualImageInput.addEventListener('change', function(event){
-            if (event.target.files && event.target.files[0]) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    imagePreview.src = e.target.result;
-                }
-                reader.readAsDataURL(event.target.files[0]);
-                isAiGeneratedInput.value = '0';
-                coverImagePathInput.value = '';
-                aiPromptInput.value = '';
-            }
-        });
+    });
 
-        // === TAB BEHAVIOR ===
-        document.getElementById('nav-manual-tab').addEventListener('click', function() {
-            isAiGeneratedInput.value = '0';
-            coverImagePathInput.value = '';
-            aiPromptInput.value = '';
-        });
-
-        document.getElementById('nav-ai-tab').addEventListener('click', function() {
-            manualImageInput.value = ''; 
-        });
+    async function askEditorAI(prompt, action, callback) {
+        // Beri feedback visual di editor
+        trixEditor.classList.add('opacity-50');
+        try {
+            const response = await fetch('{{ route("dashboard.ai.assistant.ask") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' },
+                body: JSON.stringify({ prompt, action })
+            });
+            const data = await response.json();
+            if (data.success) {
+                // Hapus teks lama dan masukkan teks baru dari AI
+                trixEditor.editor.deleteInDirection("forward");
+                callback(data.response);
+            } else {
+                alert('AI Gagal merespons: ' + (data.error || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('AI Editor Fetch Error:', error);
+            alert('Gagal terhubung ke server AI.');
+        } finally {
+            trixEditor.classList.remove('opacity-50');
+        }
     }
-
-    // Tunggu hingga `window.bootstrap` benar-benar ada sebelum menjalankan kode kita.
-    // Ini untuk mencegah race condition dengan script Vite yang di-defer.
-    let checkBootstrapInterval = setInterval(function() {
-        if (window.bootstrap) {
-            clearInterval(checkBootstrapInterval);
-            initializePageLogic();
-        }
-    }, 100);
 });
 </script>
 @endpush

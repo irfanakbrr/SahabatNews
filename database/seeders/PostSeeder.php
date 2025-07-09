@@ -98,7 +98,7 @@ class PostSeeder extends Seeder
                 'image' => 'https://images.unsplash.com/photo-1515168833906-d2a3b82b3029?auto=format&fit=crop&w=800&q=80', // siswa vokasi
                 'category_name' => 'Indonesia News',
             ],
-            [
+             [
                 'title' => 'Metaverse dan Web3: Tren Teknologi Masa Depan yang Mengubah Interaksi',
                 'content' => 'Konsep Metaverse dan Web3 menjadi topik hangat di dunia teknologi, menjanjikan perubahan fundamental dalam cara manusia berinteraksi, bekerja, dan berbisnis. Meskipun masih dalam tahap awal pengembangan, potensi desentralisasi, kepemilikan aset digital, dan pengalaman imersif membuka era baru inovasi.',
                 'image' => 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80', // VR headset
@@ -110,7 +110,7 @@ class PostSeeder extends Seeder
                 'image' => 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80', // hutan kalimantan
                 'category_name' => 'Nature',
             ],
-            [
+             [
                 'title' => 'Pemilu Kepala Daerah Serentak 2024: Dinamika Politik Lokal Menjelang Pemilihan',
                 'content' => 'Menjelang Pemilu Kepala Daerah (Pilkada) Serentak 2024, dinamika politik lokal di berbagai provinsi, kota, dan kabupaten semakin terasa. Para calon mulai intens melakukan sosialisasi, sementara partai politik sibuk menyusun strategi koalisi. Pilkada ini menjadi barometer penting bagi peta kekuatan politik di daerah.',
                 'image' => 'https://images.unsplash.com/photo-1518655048521-f130df041f66?auto=format&fit=crop&w=800&q=80', // kotak suara

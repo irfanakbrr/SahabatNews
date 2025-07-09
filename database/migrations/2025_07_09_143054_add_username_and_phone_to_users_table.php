@@ -11,8 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('posts', function (Blueprint $table) {
-            $table->unsignedBigInteger('view_count')->default(0)->after('status');
+        Schema::table('users', function (Blueprint $table) {
+            $table->string('username')->nullable()->unique()->after('name');
+            $table->string('phone')->nullable()->after('email');
         });
     }
 
@@ -21,8 +22,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('posts', function (Blueprint $table) {
-            $table->dropColumn('view_count');
+        Schema::table('users', function (Blueprint $table) {
+            $table->dropColumn(['username', 'phone']);
         });
     }
 };
