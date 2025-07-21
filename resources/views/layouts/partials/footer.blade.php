@@ -15,7 +15,7 @@
             <div>
                 <h3 class="text-sm font-semibold text-gray-500 dark:text-gray-400 tracking-wider uppercase mb-4">Navigasi</h3>
                 <ul class="space-y-3">
-                    <li><a href="{{ route('home') }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">All News</a></li>
+                    <li><a href="{{ route('all-news') }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">All News</a></li>
                     <li><a href="{{ route('about') }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">About Us</a></li>
                     <li><a href="{{ route('podcast') }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Podcast</a></li>
                     <li><a href="{{ route('contact') }}" class="text-base text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">Contacts</a></li>

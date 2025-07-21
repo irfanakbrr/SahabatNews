@@ -195,7 +195,7 @@
                             <div class="col-6">
                                 <div class="bg-light rounded-3 p-3 text-center">
                                     <div class="text-muted small">Total Views</div>
-                                    <div class="fw-bold fs-4">{{ number_format($totalViews ?? 0) }}</div>
+                                    <div class="fw-bold fs-4" id="total-views-counter">{{ number_format($totalViews ?? 0) }}</div>
                                 </div>
                             </div>
                             <div class="col-6">
@@ -232,6 +232,49 @@
 @endsection
 
 @push('page-scripts')
+<script>
+    // Realtime updates for dashboard
+    function updateDashboardData() {
+        fetch('{{ route("api.views.dashboard") }}')
+            .then(response => response.json())
+            .then(data => {
+                // Update total views counter
+                const totalViewsElement = document.getElementById('total-views-counter');
+                if (totalViewsElement) {
+                    const currentValue = parseInt(totalViewsElement.textContent.replace(/,/g, ''));
+                    if (currentValue !== data.total_views) {
+                        // Animate the change
+                        const startValue = currentValue;
+                        const endValue = data.total_views;
+                        const duration = 1000;
+                        const startTime = performance.now();
+                        
+                        function animate(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            
+                            const currentValue = Math.floor(startValue + (endValue - startValue) * progress);
+                            totalViewsElement.textContent = new Intl.NumberFormat().format(currentValue);
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(animate);
+                            }
+                        }
+                        
+                        requestAnimationFrame(animate);
+                    }
+                }
+            })
+            .catch(error => console.error('Error updating dashboard data:', error));
+    }
+
+    // Update every 30 seconds
+    setInterval(updateDashboardData, 30000);
+    
+    // Initial update after 5 seconds
+    setTimeout(updateDashboardData, 5000);
+</script>
+
 @if(!empty($chartLabels) && $chartLabels->count() > 0 && !empty($chartData) && $chartData->count() > 0 && !empty($chartColors) && $chartColors->count() > 0)
 <script>
     document.addEventListener('DOMContentLoaded', function () {

@@ -7,7 +7,7 @@
         <div class="prose max-w-none dark:prose-invert">
             <h1 class="text-center text-3xl sm:text-4xl font-extrabold mb-8">Tentang SahabatNews</h1>
             <div class="flex flex-col sm:flex-row gap-8 items-center mb-8">
-                <img src="https://via.placeholder.com/400x300" alt="Tim SahabatNews" class="rounded-xl shadow-lg w-full sm:w-1/2 object-cover h-56 sm:h-72" loading="lazy">
+                <img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=871&q=80" alt="Tim SahabatNews" class="rounded-xl shadow-lg w-full sm:w-1/2 object-cover h-56 sm:h-72" loading="lazy">
                 <div class="flex-1">
                     <h2 class="text-2xl font-bold mb-3">Visi Kami</h2>
                     <p class="mb-4">Menjadi sumber berita terpercaya dan relevan bagi masyarakat Indonesia, menyajikan informasi akurat, mendalam, dan berimbang untuk mencerahkan dan memberdayakan.</p>

@@ -103,6 +103,11 @@
             <p class="text-gray-500">Silakan coba lagi nanti atau periksa koneksi internet Anda.</p>
         </div>
     @endif
+
+    <!-- Ad Space -->
+    <div class="mt-12">
+        <x-ad-space class="!border-gray-200 !bg-gray-50 dark:!bg-gray-800/50" />
+    </div>
 </div>
 
 @push('styles')

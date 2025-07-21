@@ -4,7 +4,13 @@
 
 @section('header-content')
 <div class="flex items-center space-x-4">
-    <h1 class="text-2xl font-semibold text-gray-800 hidden md:block">Dashboard</h1>
+    <div class="flex items-center space-x-2">
+        <h1 class="text-2xl font-semibold text-gray-800 hidden md:block">Dashboard</h1>
+        <div id="live-indicator" class="flex items-center space-x-1 text-xs text-green-600">
+            <div class="w-2 h-2 bg-green-500 rounded-full"></div>
+            <span>LIVE</span>
+        </div>
+    </div>
     <!-- Search -->
     <div class="relative">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -30,25 +36,39 @@
     <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <div class="p-6 bg-white/60 backdrop-blur-sm rounded-xl stat-card">
             <p class="text-sm font-medium text-gray-600 uppercase">Total Views</p>
-            <p class="text-3xl font-bold text-gray-900" data-target="{{ $totalViewsAllPosts ?? 0 }}">0</p>
+            <p class="text-3xl font-bold text-gray-900" data-target="{{ $totalViewsAllPosts ?? 0 }}" id="total-views-display">{{ number_format($totalViewsAllPosts ?? 0) }}</p>
         </div>
         <div class="p-6 bg-white/60 backdrop-blur-sm rounded-xl stat-card">
             <p class="text-sm font-medium text-gray-600 uppercase">Pembaca Hari Ini</p>
-            <p class="text-3xl font-bold text-gray-900" data-target="{{ $todayVisitors ?? 0 }}">0</p>
+            <p class="text-3xl font-bold text-gray-900" data-target="{{ $todayVisitors ?? 0 }}" id="today-visitors-display">{{ number_format($todayVisitors ?? 0) }}</p>
         </div>
         <div class="p-6 bg-white/60 backdrop-blur-sm rounded-xl stat-card">
             <p class="text-sm font-medium text-gray-600 uppercase">Artikel Terbit Hari Ini</p>
-            <p class="text-3xl font-bold text-gray-900" data-target="{{ $articlesToday ?? 0 }}">0</p>
+            <p class="text-3xl font-bold text-gray-900" data-target="{{ $articlesToday ?? 0 }}">{{ number_format($articlesToday ?? 0) }}</p>
         </div>
         <div class="p-6 bg-white/60 backdrop-blur-sm rounded-xl stat-card">
             <p class="text-sm font-medium text-gray-600 uppercase">Komentar Pending</p>
-            <p class="text-3xl font-bold text-gray-900" data-target="{{ $pendingComments ?? 0 }}">0</p>
+            <p class="text-3xl font-bold text-gray-900" data-target="{{ $pendingComments ?? 0 }}">{{ number_format($pendingComments ?? 0) }}</p>
         </div>
         <div class="p-6 bg-white/60 backdrop-blur-sm rounded-xl">
             <p class="text-sm font-medium text-gray-500 uppercase">Jumlah Draf</p>
             <p class="text-3xl font-bold text-gray-800">{{ number_format($draftCount ?? 0) }}</p>
         </div>
     </div>
+
+    <!-- Debug Info (temporary) -->
+    @if(config('app.debug'))
+    <div class="mt-6 p-4 bg-blue-100 rounded-lg">
+        <h3 class="font-semibold text-blue-800">Debug Info:</h3>
+        <ul class="text-sm text-blue-700 mt-2">
+            <li>Total Views (from controller): {{ $totalViewsAllPosts ?? 'N/A' }}</li>
+            <li>Today Visitors (from controller): {{ $todayVisitors ?? 'N/A' }}</li>
+            <li>Articles Today (from controller): {{ $articlesToday ?? 'N/A' }}</li>
+            <li>Pending Comments (from controller): {{ $pendingComments ?? 'N/A' }}</li>
+            <li>Draft Count (from controller): {{ $draftCount ?? 'N/A' }}</li>
+        </ul>
+    </div>
+    @endif
 
     <!-- Main Content Grid -->
     <div class="grid grid-cols-1 gap-6 mt-6 lg:grid-cols-3">
@@ -118,14 +138,14 @@
 
         // Chart.js implementation
         const monthlyCtx = document.getElementById('monthlyPostsChart');
-        if (monthlyCtx && @json($trendLabels) && @json($trendData)) {
+        if (monthlyCtx && @json($trendLabels ?? []) && @json($trendData ?? [])) {
             new Chart(monthlyCtx, {
                 type: 'bar',
                 data: {
-                    labels: @json($trendLabels),
+                    labels: @json($trendLabels ?? []),
                     datasets: [{
                         label: 'Artikel Dipublikasi',
-                        data: @json($trendData),
+                        data: @json($trendData ?? []),
                         backgroundColor: 'rgba(84, 34, 158, 0.7)',
                         borderColor: 'rgba(84, 34, 158, 1)',
                         borderWidth: 1,
@@ -143,6 +163,65 @@
                 }
             });
         }
+
+        // Realtime updates
+        function updateRealtimeData() {
+            fetch('{{ route("api.views.dashboard") }}')
+                .then(response => response.json())
+                .then(data => {
+                    console.log('Realtime API Data:', data);
+                    
+                    // Update total views
+                    const totalViewsElement = document.getElementById('total-views-display');
+                    if (totalViewsElement) {
+                        const currentValue = parseInt(totalViewsElement.textContent.replace(/,/g, ''));
+                        if (currentValue !== parseInt(data.total_views)) {
+                            anime({
+                                targets: { value: currentValue },
+                                value: parseInt(data.total_views),
+                                round: 1,
+                                duration: 1000,
+                                easing: 'easeOutExpo',
+                                update: function(anim) {
+                                    totalViewsElement.textContent = new Intl.NumberFormat().format(anim.animations[0].currentValue);
+                                }
+                            });
+                        }
+                    }
+
+                    // Update today's visitors
+                    const todayVisitorsElement = document.getElementById('today-visitors-display');
+                    if (todayVisitorsElement) {
+                        const currentValue = parseInt(todayVisitorsElement.textContent.replace(/,/g, ''));
+                        if (currentValue !== data.today_views) {
+                            anime({
+                                targets: { value: currentValue },
+                                value: data.today_views,
+                                round: 1,
+                                duration: 1000,
+                                easing: 'easeOutExpo',
+                                update: function(anim) {
+                                    todayVisitorsElement.textContent = new Intl.NumberFormat().format(anim.animations[0].currentValue);
+                                }
+                            });
+                        }
+                    }
+
+                    // Add live indicator
+                    const liveIndicator = document.getElementById('live-indicator');
+                    if (liveIndicator) {
+                        liveIndicator.classList.add('animate-pulse');
+                        setTimeout(() => liveIndicator.classList.remove('animate-pulse'), 1000);
+                    }
+                })
+                .catch(error => console.error('Error fetching realtime data:', error));
+        }
+
+        // Update every 30 seconds
+        setInterval(updateRealtimeData, 30000);
+        
+        // Initial update after 5 seconds
+        setTimeout(updateRealtimeData, 5000);
     });
 </script>
 @endpush 

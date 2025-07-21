@@ -89,6 +89,11 @@
             </div>
         </div>
     @endif
+
+    <!-- Ad Space -->
+    <div class="mt-8">
+        <x-ad-space />
+    </div>
 </div>
 
 @push('styles')

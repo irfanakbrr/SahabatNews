@@ -30,11 +30,21 @@
             </span>
         </div>
 
+        <!-- Ad Space (Top) -->
+        <div class="my-6">
+            <x-ad-space />
+        </div>
+
         <!-- Isi Konten Artikel -->
         <div class="space-y-4 prose max-w-none">
             {!! $post->content !!}
         </div>
         <!-- End Isi Konten Artikel -->
+
+        <!-- Ad Space (Bottom) -->
+        <div class="my-6">
+            <x-ad-space />
+        </div>
 
         <!-- Tombol Share -->
         <div class="mt-6 sm:mt-8 pt-4 border-t flex items-center gap-3">

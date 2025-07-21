@@ -1,61 +1,61 @@
-const preLoad = function () {
-    return caches.open("offline").then(function (cache) {
-        // caching index and important routes
-        return cache.addAll(filesToCache);
-    });
-};
+const CACHE_NAME = 'sahabatnews-v2'; // Nama cache baru
+const OFFLINE_URL = 'offline.html';
 
-self.addEventListener("install", function (event) {
-    event.waitUntil(preLoad());
-});
-
-const filesToCache = [
+// Daftar file yang akan di-cache saat instalasi
+const FILES_TO_CACHE = [
     '/',
-    '/offline.html'
+    '/offline.html',
+    '/logosn.svg',
+    '/css/404-space.css',
+    '/assets/404/404.svg',
+    '/assets/404/rocket.svg',
+    '/assets/404/earth.svg',
+    '/assets/404/moon.svg',
+    '/assets/404/astronaut.svg',
+    '/assets/404/overlay_stars.svg',
+    '/assets/404/bg_purple.png'
 ];
 
-const checkResponse = function (request) {
-    return new Promise(function (fulfill, reject) {
-        fetch(request).then(function (response) {
-            if (response.status !== 404) {
-                fulfill(response);
-            } else {
-                reject();
-            }
-        }, reject);
-    });
-};
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[ServiceWorker] Pre-caching offline page');
+      return cache.addAll(FILES_TO_CACHE);
+    })
+  );
+  self.skipWaiting();
+});
 
-const addToCache = function (request) {
-    // Only cache http(s) requests
-    if (!request.url.startsWith('http')) {
-        return Promise.resolve();
-    }
-    return caches.open("offline").then(function (cache) {
-        return fetch(request).then(function (response) {
-            return cache.put(request, response);
-        });
-    });
-};
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheName !== CACHE_NAME) {
+            console.log('[ServiceWorker] Deleting old cache:', cacheName);
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
+  );
+  self.clients.claim();
+});
 
-
-const returnFromCache = function (request) {
-    return caches.open("offline").then(function (cache) {
-        return cache.match(request).then(function (matching) {
-            if (!matching || matching.status === 404) {
-                return cache.match("offline.html");
-            } else {
-                return matching;
-            }
-        });
-    });
-};
-
-self.addEventListener("fetch", function (event) {
-    event.respondWith(checkResponse(event.request).catch(function () {
-        return returnFromCache(event.request);
-    }));
-    if(!event.request.url.startsWith('http')){
-        event.waitUntil(addToCache(event.request));
-    }
+self.addEventListener('fetch', (event) => {
+  if (event.request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkResponse = await fetch(event.request);
+          return networkResponse;
+        } catch (error) {
+          console.log('[ServiceWorker] Fetch failed; returning offline page.', error);
+          const cache = await caches.open(CACHE_NAME);
+          const cachedResponse = await cache.match(OFFLINE_URL);
+          return cachedResponse;
+        }
+      })()
+    );
+  }
 });

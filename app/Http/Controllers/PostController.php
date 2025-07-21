@@ -5,51 +5,219 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
 use App\Models\Category;
+use Exception;
 
 class PostController extends Controller
 {
     /**
-     * Display the specified resource.
+     * Display the specified resource with comprehensive error handling.
      */
     public function show(Post $post) // Menggunakan Route Model Binding
     {
-        // Increment view count
-        // Cara sederhana:
-        $post->increment('view_count');
-        // Atau jika ingin lebih canggih (misal: mencegah double count dari session yg sama dlm waktu singkat):
-        // if (!session()->has('viewed_post_' . $post->id)) {
-        //     $post->increment('view_count');
-        //     session()->put('viewed_post_' . $post->id, true, 60); // Simpan di session selama 60 menit
-        // }
+        try {
+            // === SAFE POST DETAIL WITH ERROR HANDLING ===
+            
+            // 1. Safe View Tracking (Most problematic part)
+            $this->safeTrackView($post);
 
-        // Pastikan post sudah published (opsional, tergantung logic akses)
-        // if ($post->status !== 'published') {
-        //     abort(404);
-        // }
+            // 2. Safe Status Check
+            $this->safeStatusCheck($post);
 
-        // Eager load relasi utama untuk post saat ini
-        $post->load('user', 'category');
+            // 3. Safe Load Relationships
+            $post = $this->safeLoadPostRelations($post);
 
-        // Ambil komentar yang sudah disetujui beserta relasi user-nya
-        $comments = $post->comments()
-                         ->with('user') // Optimalisasi N+1 untuk user komentar
-                         ->where('approved', true)
-                         ->latest()
-                         ->paginate(5);
+            // 4. Safe Get Comments
+            $comments = $this->safeGetComments($post);
 
-        // Ambil berita terkait (contoh: dari kategori yang sama, kecuali post ini)
-        $relatedPosts = Post::where('category_id', $post->category_id)
-                            ->where('id', '!=', $post->id)
-                            ->where('status', 'published')
-                            ->with('user', 'category') // Optimalisasi N+1 untuk berita terkait
-                            ->latest('published_at')
-                            ->limit(4)
-                            ->get();
+            // 5. Safe Get Related Posts
+            $relatedPosts = $this->safeGetRelatedPosts($post);
 
-        $isBookmarked = auth()->check() ? auth()->user()->bookmarks()->where('post_id', $post->id)->exists() : false;
+            // 6. Safe Check Bookmark Status
+            $isBookmarked = $this->safeCheckBookmarkStatus($post);
 
-        return view('post-detail', compact('post', 'comments', 'relatedPosts', 'isBookmarked'));
+            return view('post-detail', compact('post', 'comments', 'relatedPosts', 'isBookmarked'));
+
+        } catch (Exception $e) {
+            // Log error for debugging
+            Log::error('PostController::show error: ' . $e->getMessage(), [
+                'post_id' => $post->id,
+                'post_slug' => $post->slug,
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            // Return safe fallback
+            return $this->fallbackPostDetail($post);
+        }
+    }
+
+    /**
+     * Safe method to track post view
+     */
+    private function safeTrackView(Post $post)
+    {
+        try {
+            // Check if PostView class exists and post_views table exists
+            if (class_exists('\App\Models\PostView') && Schema::hasTable('post_views')) {
+                \App\Models\PostView::trackView($post, request());
+            } else {
+                // Fallback: Simple increment view_count
+                $this->fallbackTrackView($post);
+            }
+        } catch (Exception $e) {
+            Log::error('Error tracking view: ' . $e->getMessage(), ['post_id' => $post->id]);
+            $this->fallbackTrackView($post);
+        }
+    }
+
+    /**
+     * Fallback method for tracking views
+     */
+    private function fallbackTrackView(Post $post)
+    {
+        try {
+            // Simple view count increment without detailed tracking
+            $post->increment('view_count');
+        } catch (Exception $e) {
+            Log::error('Error in fallback view tracking: ' . $e->getMessage(), ['post_id' => $post->id]);
+            // Ignore if even this fails
+        }
+    }
+
+    /**
+     * Safe method to check post status
+     */
+    private function safeStatusCheck(Post $post)
+    {
+        try {
+            // Optional status check - uncomment if needed
+            // if ($post->status !== 'published') {
+            //     abort(404);
+            // }
+        } catch (Exception $e) {
+            Log::error('Error checking post status: ' . $e->getMessage(), ['post_id' => $post->id]);
+            // Continue anyway
+        }
+    }
+
+    /**
+     * Safe method to load post relationships
+     */
+    private function safeLoadPostRelations(Post $post)
+    {
+        try {
+            // Eager load relasi utama untuk post saat ini
+            $post->load('user', 'category');
+            return $post;
+        } catch (Exception $e) {
+            Log::error('Error loading post relations: ' . $e->getMessage(), ['post_id' => $post->id]);
+            return $post; // Return post as is if relations fail
+        }
+    }
+
+    /**
+     * Safe method to get comments
+     */
+    private function safeGetComments(Post $post)
+    {
+        try {
+            // Ambil komentar yang sudah disetujui beserta relasi user-nya
+            return $post->comments()
+                        ->with('user') // Optimalisasi N+1 untuk user komentar
+                        ->where('approved', true)
+                        ->latest()
+                        ->paginate(5);
+        } catch (Exception $e) {
+            Log::error('Error getting comments: ' . $e->getMessage(), ['post_id' => $post->id]);
+            return $this->fallbackComments();
+        }
+    }
+
+    /**
+     * Fallback method for comments
+     */
+    private function fallbackComments()
+    {
+        try {
+            // Return empty paginated collection
+            return new \Illuminate\Pagination\LengthAwarePaginator(
+                collect([]), // Empty items
+                0, // Total count
+                5, // Per page
+                1, // Current page
+                ['path' => request()->url()]
+            );
+        } catch (Exception $e) {
+            Log::error('Error creating fallback comments: ' . $e->getMessage());
+            return collect(); // Ultimate fallback
+        }
+    }
+
+    /**
+     * Safe method to get related posts
+     */
+    private function safeGetRelatedPosts(Post $post)
+    {
+        try {
+            // Ambil berita terkait (contoh: dari kategori yang sama, kecuali post ini)
+            return Post::where('category_id', $post->category_id)
+                        ->where('id', '!=', $post->id)
+                        ->where('status', 'published')
+                        ->with('user', 'category') // Optimalisasi N+1 untuk berita terkait
+                        ->latest('published_at')
+                        ->limit(4)
+                        ->get();
+        } catch (Exception $e) {
+            Log::error('Error getting related posts: ' . $e->getMessage(), ['post_id' => $post->id]);
+            return collect(); // Return empty collection
+        }
+    }
+
+    /**
+     * Safe method to check bookmark status
+     */
+    private function safeCheckBookmarkStatus(Post $post)
+    {
+        try {
+            if (!auth()->check()) {
+                return false;
+            }
+
+            // Check if bookmarks table exists
+            if (!Schema::hasTable('bookmarks')) {
+                Log::warning('bookmarks table does not exist');
+                return false;
+            }
+
+            return auth()->user()->bookmarks()->where('post_id', $post->id)->exists();
+        } catch (Exception $e) {
+            Log::error('Error checking bookmark status: ' . $e->getMessage(), ['post_id' => $post->id]);
+            return false; // Default to not bookmarked
+        }
+    }
+
+    /**
+     * Ultimate fallback for post detail
+     */
+    private function fallbackPostDetail(Post $post)
+    {
+        try {
+            // Basic post data without complex relationships
+            $comments = $this->fallbackComments();
+            $relatedPosts = collect();
+            $isBookmarked = false;
+
+            return view('post-detail', compact('post', 'comments', 'relatedPosts', 'isBookmarked'));
+        } catch (Exception $e) {
+            Log::error('Critical error in fallback post detail: ' . $e->getMessage());
+            
+            // If even fallback fails, show 404
+            abort(404, 'Article not available at the moment');
+        }
     }
 
     /**
@@ -57,22 +225,30 @@ class PostController extends Controller
      */
     public function search(Request $request)
     {
-        $keyword = $request->input('q');
+        try {
+            $query = $request->input('q');
+            
+            if (empty($query)) {
+                return redirect()->route('all-news');
+            }
 
-        if (empty($keyword)) {
-            return redirect()->route('home');
+            $posts = Post::where('status', 'published')
+                        ->where(function($q) use ($query) {
+                            $q->where('title', 'like', "%{$query}%")
+                              ->orWhere('content', 'like', "%{$query}%");
+                        })
+                        ->with('user', 'category')
+                        ->latest('published_at')
+                        ->paginate(10);
+
+            return view('search-results', compact('posts', 'query'));
+
+        } catch (Exception $e) {
+            Log::error('Search error: ' . $e->getMessage(), ['query' => $request->input('q')]);
+            
+            // Fallback to all news page
+            return redirect()->route('all-news')->with('error', 'Terjadi kesalahan saat mencari. Silakan coba lagi.');
         }
-
-        // Cari post menggunakan Scout, dan muat relasi yang diperlukan
-        $posts = Post::search($keyword)
-            ->where('status', 'published') // Hanya cari post yang sudah publish
-            ->query(function ($query) {
-                $query->with(['category', 'user']); // Eager load relasi
-            })
-            ->paginate(10)
-            ->withQueryString(); // Agar paginasi tetap menyertakan query ?q=...
-
-        return view('search-results', compact('posts', 'keyword'));
     }
 
     // --- Admin/Editor Methods ---
@@ -354,5 +530,52 @@ class PostController extends Controller
         $post->delete();
         return redirect()->route('dashboard.userposts.index')
             ->with('success', 'Artikel berhasil dihapus.');
+    }
+
+    /**
+     * Display all news with pagination and filters.
+     */
+    public function allNews(Request $request)
+    {
+        $query = Post::where('status', 'published')
+                    ->with('user', 'category');
+
+        // Filter by category
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+
+        // Filter by year
+        if ($request->filled('year')) {
+            $query->whereYear('published_at', $request->year);
+        }
+
+        // Search functionality
+        if ($request->filled('search')) {
+            $searchTerm = $request->search;
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('title', 'like', "%{$searchTerm}%")
+                  ->orWhere('content', 'like', "%{$searchTerm}%")
+                  ->orWhere('excerpt', 'like', "%{$searchTerm}%");
+            });
+        }
+
+        // Order by latest published
+        $query->latest('published_at');
+
+        // Pagination - 10 posts per page
+        $posts = $query->paginate(10);
+
+        // Get categories for filter dropdown
+        $categories = Category::orderBy('name')->get();
+
+        // Get available years for filter
+        $availableYears = Post::where('status', 'published')
+                             ->selectRaw('YEAR(published_at) as year')
+                             ->distinct()
+                             ->orderBy('year', 'desc')
+                             ->pluck('year');
+
+        return view('all-news', compact('posts', 'categories', 'availableYears'));
     }
 } 

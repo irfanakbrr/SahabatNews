@@ -76,6 +76,11 @@
         @endforeach
     </div>
 
+    <!-- Ad Space -->
+    <div class="mt-8">
+        <x-ad-space class="!border-gray-200 !bg-gray-50 dark:!bg-gray-800/50" />
+    </div>
+
     <!-- Navigasi Surah -->
     <div class="flex justify-between items-center mt-8 p-6 bg-gray-50 rounded-lg">
         @if(isset($surah['surat_sebelumnya']) && $surah['surat_sebelumnya'])

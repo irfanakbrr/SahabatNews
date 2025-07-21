@@ -17,9 +17,9 @@ class CheckRole
      */
     public function handle(Request $request, Closure $next, ...$roles): Response
     {
-        // Jika user tidak login atau tidak punya role, redirect ke login
+        // Pengecekan yang lebih aman
         if (!Auth::check() || !Auth::user()->role) {
-            return redirect('login');
+            return redirect('login')->with('error', 'Akses ditolak. Akun Anda tidak memiliki peran yang valid.');
         }
 
         // Ambil nama role user

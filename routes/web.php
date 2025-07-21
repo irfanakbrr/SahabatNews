@@ -29,11 +29,11 @@ use App\Http\Controllers\BookmarkController;
 
 // Halaman Publik
 Route::get('/', function () {
-    // Ambil 11 post terbaru (5 utama, 3 samping, 3 bawah)
+    // Ambil 11 post terbaru (1 utama, 3 samping, 7 bawah)
     $posts = \App\Models\Post::where('status', 'published')->latest('published_at')->take(11)->get();
     $mainPost = $posts->first();
     $sidePosts = $posts->slice(1, 3);
-    $bottomPosts = $posts->slice(4, 3); // 3 post berikutnya
+    $bottomPosts = $posts->slice(4, 7); // 7 post berikutnya (post 5-11)
     // Gunakan cache untuk kategori
     $categories = \Cache::remember('categories', 3600, function() {
         return \App\Models\Category::orderBy('name')->get();
@@ -44,8 +44,10 @@ Route::get('/', function () {
 Route::get('/about', function () { return view('about'); })->name('about');
 Route::get('/contact', function () { return view('contact'); })->name('contact');
 Route::get('/podcast', function () { return view('podcast'); })->name('podcast');
+Route::get('/support', function () { return view('support'); })->name('support');
 Route::get('/quran', [QuranController::class, 'index'])->name('quran.index');
 Route::get('/quran/{nomor}', [QuranController::class, 'show'])->name('quran.show');
+Route::get('/all-news', [PostController::class, 'allNews'])->name('all-news');
 
 // Prayer times routes
 Route::get('/prayer-times', [App\Http\Controllers\PrayerTimesController::class, 'index'])->name('prayer-times.index');
@@ -131,20 +133,65 @@ Route::middleware(['auth', 'verified'])->prefix('dashboard')->name('dashboard.')
     Route::delete('user-posts/{post}', [PostController::class, 'destroyUser'])->name('userposts.destroy');
 });
 
-// Route dashboard yang berbeda untuk setiap role
+// Route dashboard yang berbeda untuk setiap role (dengan error handling)
 Route::middleware(['auth', 'verified'])->get('/dashboard', function () {
-    $user = auth()->user();
-    
-    // Redirect admin/editor ke halaman analytics
-    if ($user->hasAnyRole(['admin', 'editor'])) {
-        return app(\App\Http\Controllers\AnalyticsController::class)->index();
+    try {
+        $user = auth()->user();
+        
+        // Safe role checking dengan error handling
+        $hasAdminRole = false;
+        try {
+            $hasAdminRole = $user && $user->role && $user->hasAnyRole(['admin', 'editor']);
+        } catch (Exception $e) {
+            \Log::error('Role check error in dashboard route: ' . $e->getMessage());
+            $hasAdminRole = false;
+        }
+        
+        // Redirect admin/editor ke halaman analytics
+        if ($hasAdminRole) {
+            try {
+                return app(\App\Http\Controllers\AnalyticsController::class)->index();
+            } catch (Exception $e) {
+                \Log::error('AnalyticsController error in dashboard route: ' . $e->getMessage());
+                // Fallback to simple dashboard jika AnalyticsController gagal
+            }
+        }
+        
+        // User biasa atau fallback ke dashboard sederhana
+        $postCount = 0;
+        $userCount = 0;
+        $categoryCount = 0;
+        
+        try {
+            $postCount = \App\Models\Post::count();
+        } catch (Exception $e) {
+            \Log::error('Error getting post count in dashboard: ' . $e->getMessage());
+        }
+        
+        try {
+            $userCount = \App\Models\User::count();
+        } catch (Exception $e) {
+            \Log::error('Error getting user count in dashboard: ' . $e->getMessage());
+        }
+        
+        try {
+            $categoryCount = \App\Models\Category::count();
+        } catch (Exception $e) {
+            \Log::error('Error getting category count in dashboard: ' . $e->getMessage());
+        }
+        
+        return view('dashboard', compact('postCount', 'userCount', 'categoryCount'));
+        
+    } catch (Exception $e) {
+        \Log::error('Critical error in dashboard route: ' . $e->getMessage());
+        
+        // Ultimate fallback dashboard
+        return view('dashboard', [
+            'postCount' => 0,
+            'userCount' => 0,
+            'categoryCount' => 0
+        ]);
     }
-    
-    // User biasa ke dashboard sederhana
-    $postCount = \App\Models\Post::count();
-    $userCount = \App\Models\User::count();
-    $categoryCount = \App\Models\Category::count();
-    return view('dashboard', compact('postCount', 'userCount', 'categoryCount'));
 })->name('dashboard');
 
 // Route global agar route('profile.edit') selalu ada
@@ -176,11 +223,22 @@ Route::get('/load-more-posts', function (\Illuminate\Http\Request $request) {
         ->with('category') // Eager load untuk efisiensi
         ->get()
         ->map(function($post) {
-            // Pastikan format data konsisten
+            // Perbaiki logic image_url untuk menangani URL vs path storage
+            $imageUrl = 'https://via.placeholder.com/400x250?text=No+Image';
+            if ($post->image) {
+                // Jika image sudah berupa URL (http/https), gunakan langsung
+                if (Str::startsWith($post->image, ['http://', 'https://'])) {
+                    $imageUrl = $post->image;
+                } else {
+                    // Jika image adalah path di storage, gunakan Storage::url
+                    $imageUrl = \Storage::url($post->image);
+                }
+            }
+            
             return [
                 'slug' => $post->slug,
                 'title' => $post->title,
-                'image_url' => $post->image ? \Storage::url($post->image) : 'https://via.placeholder.com/400x250?text=No+Image',
+                'image_url' => $imageUrl,
                 'category' => $post->category ? ['name' => $post->category->name, 'color' => $post->category->color] : null,
                 'published_at_formatted' => $post->published_at ? $post->published_at->format('d M Y') : '-',
             ];
@@ -193,5 +251,47 @@ Route::view('/privacy', 'privacy')->name('privacy');
 
 // Route untuk hasil pencarian
 Route::get('/search', [PostController::class, 'search'])->name('search');
+
+// API Routes for realtime views
+Route::prefix('api')->group(function () {
+    Route::get('/views/realtime', [App\Http\Controllers\Api\ViewsController::class, 'getRealtimeData'])->name('api.views.realtime');
+    Route::get('/views/post/{postId}', [App\Http\Controllers\Api\ViewsController::class, 'getPostViews'])->name('api.views.post');
+    Route::get('/views/dashboard', [App\Http\Controllers\Api\ViewsController::class, 'getDashboardSummary'])->name('api.views.dashboard');
+});
+
+// Test route for dashboard data
+Route::get('/test-dashboard', function () {
+    $controller = new \App\Http\Controllers\AnalyticsController();
+    $view = $controller->index();
+    
+    // Extract data from view
+    $viewData = $view->getData();
+    
+    return response()->json([
+        'totalViewsAllPosts' => $viewData['totalViewsAllPosts'] ?? 'N/A',
+        'todayVisitors' => $viewData['todayVisitors'] ?? 'N/A',
+        'articlesToday' => $viewData['articlesToday'] ?? 'N/A',
+        'pendingComments' => $viewData['pendingComments'] ?? 'N/A',
+        'draftCount' => $viewData['draftCount'] ?? 'N/A',
+        'viewName' => $view->getName()
+    ]);
+})->name('test.dashboard');
+
+// Test route for admin dashboard view
+Route::get('/test-admin-dashboard', function () {
+    $totalViewsAllPosts = \App\Models\Post::sum('view_count');
+    $todayVisitors = \DB::table('post_views')->whereDate('viewed_at', today())->distinct('ip_address')->count('ip_address');
+    $articlesToday = \App\Models\Post::where('status', 'published')->whereDate('published_at', today())->count();
+    $pendingComments = \App\Models\Comment::where('approved', false)->count();
+    $draftCount = \App\Models\Post::where('status', 'draft')->count();
+    
+    return view('test-admin-dashboard', compact(
+        'totalViewsAllPosts',
+        'todayVisitors', 
+        'articlesToday',
+        'pendingComments',
+        'draftCount'
+    ));
+})->name('test.admin.dashboard');
 
 require __DIR__.'/auth.php';

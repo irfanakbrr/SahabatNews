@@ -13,7 +13,7 @@
 
                 <!-- Navigation Links (Desktop) -->
                 <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link href="{{ route('home') }}" :active="request()->routeIs('home')">
+                    <x-nav-link href="{{ route('all-news') }}" :active="request()->routeIs('all-news')">
                         {{ __('All News') }}
                     </x-nav-link>
                     <x-nav-link href="{{ route('about') }}" :active="request()->routeIs('about')">
@@ -37,14 +37,14 @@
             <!-- Right Side (Login/Register/Support/Dashboard - Desktop) -->
             <div class="hidden sm:flex sm:items-center sm:ms-6 space-x-4">
                 @guest
-                    <a href="#" class="bg-black text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition">{{ __('Support') }}</a>
+                    <a href="{{ route('support') }}" class="bg-black text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition">{{ __('Support') }}</a>
                     <a href="{{ route('login') }}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline">{{ __('Log in') }}</a>
                     @if (Route::has('register'))
                         <a href="{{ route('register') }}" class="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 underline">{{ __('Register') }}</a>
                     @endif
                 @else
                  <!-- Support Button for Logged In User -->
-                 <a href="#" class="bg-black text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition">{{ __('Support') }}</a>
+                 <a href="{{ route('support') }}" class="bg-black text-white px-3 py-1.5 rounded-md text-sm font-medium hover:bg-gray-700 dark:bg-gray-700 dark:hover:bg-gray-600 transition">{{ __('Support') }}</a>
                  <!-- User Dropdown -->
                  <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
@@ -95,7 +95,7 @@
     <!-- Responsive Navigation Menu -->
     <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden">
         <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('home')" :active="request()->routeIs('home')">
+            <x-responsive-nav-link :href="route('all-news')" :active="request()->routeIs('all-news')">
                 {{ __('All News') }}
             </x-responsive-nav-link>
             <x-responsive-nav-link :href="route('about')" :active="request()->routeIs('about')">
@@ -113,7 +113,7 @@
             <x-responsive-nav-link :href="route('contact')" :active="request()->routeIs('contact')">
                 {{ __('Contacts') }}
             </x-responsive-nav-link>
-             <x-responsive-nav-link href="#" >
+             <x-responsive-nav-link :href="route('support')" :active="request()->routeIs('support')">
                  {{ __('Support') }} {{-- Tambah support di mobile --}}
             </x-responsive-nav-link>
         </div>
